@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://lueuru.github.io/xinbi-basic/sitemap.xml

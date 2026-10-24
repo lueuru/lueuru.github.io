@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>社刊《年轻的心》 - 新笔文学社</title>
+<meta name="description" content="新笔文学社社刊《年轻的心》往期回顾：期号、主题与精选篇目。">
+<meta name="theme-color" content="#8b3a3a">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="新笔文学社">
+<meta property="og:title" content="社刊《年轻的心》 - 新笔文学社">
+<meta property="og:description" content="新笔文学社社刊《年轻的心》往期回顾。">
+<meta property="og:locale" content="zh_CN">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%238b3a3a'/%3E%3Ctext x='32' y='43' font-size='30' text-anchor='middle' fill='%23fff' font-family='serif'%3E新%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-page="journal">
+
+<div class="pbar" id="pbar"></div>
+<div class="toast" id="toastEl" role="status" aria-live="polite"></div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-feather" viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+    <symbol id="i-arrow-up" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></symbol>
+    <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+  </defs>
+</svg>
+
+<header class="header" id="header">
+  <a href="index.html" class="logo">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-feather"/></svg>
+    <span>新笔文学社</span>
+  </a>
+  <div class="head-right">
+    <nav class="nav-links" aria-label="主导航">
+      <a href="index.html">首页</a>
+      <a href="index.html#works">作品展示</a>
+      <a href="journal.html" class="active">社刊</a>
+      <a href="index.html#events">近期活动</a>
+      <a href="index.html#contact">联系我们</a>
+    </nav>
+    <button class="ubtn" id="userBtn" title="登录 / 注册" aria-label="用户菜单"></button>
+    <div class="udrop" id="userDropdown"></div>
+    <button class="mbtn" id="menuBtn" aria-label="打开菜单"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<div class="mnav" id="mobileNav">
+  <a href="index.html">首页</a><a href="index.html#works">作品展示</a>
+  <a href="journal.html">社刊</a><a href="index.html#events">近期活动</a>
+  <a href="index.html#contact">联系我们</a>
+</div>
+
+<section class="journal-hero">
+  <div class="st rv">
+    <span class="tag">Journal</span>
+    <h2>社刊《年轻的心》</h2>
+    <p class="desc" id="journalIntro"></p>
+  </div>
+</section>
+
+<main class="jlist" id="journalList"></main>
+
+<footer>
+  <div class="si">
+    <h3>新笔文学社</h3>
+    <p class="tl">以文会友 · 以笔写心 · 以书传情</p>
+    <div class="fsoc">
+      <a href="index.html#contact" aria-label="微信公众号"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-message"/></svg></a>
+      <a href="index.html#contact" aria-label="QQ群"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-users"/></svg></a>
+      <a href="index.html#contact" aria-label="微博"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-globe"/></svg></a>
+    </div>
+    <nav class="foot-links" aria-label="页脚导航">
+      <a href="index.html">首页</a>
+      <a href="journal.html">社刊《年轻的心》</a>
+      <a href="index.html#submission">在线投稿</a>
+      <a href="index.html#contact">联系我们</a>
+    </nav>
+    <p class="copy">© 2025-2026 新笔文学社 版权所有 | 基础版本 v0.2 · 本地演示</p>
+  </div>
+</footer>
+
+<button class="btop" id="backTop" aria-label="回到顶部"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-arrow-up"/></svg></button>
+<button class="dkbtn" id="darkToggle" aria-label="切换深浅色"></button>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/config.js"></script>
+<script src="assets/js/app.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function () {});
+  });
+}
+</script>
+</body>
+</html>

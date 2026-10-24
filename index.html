@@ -4,9 +4,34 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>新笔文学社 - 用文字书写灵魂</title>
-<meta name="description" content="岳阳县第二中学新笔文学社官方网站：社员作品、近期活动、社团风采、在线投稿。以文会友，以笔写心。">
+<meta name="description" content="岳阳县第二中学新笔文学社官方网站：社员作品、社刊《年轻的心》、近期活动、社团风采、在线投稿。以文会友，以笔写心。">
+<meta name="author" content="新笔文学社">
+<meta name="theme-color" content="#8b3a3a">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="新笔文学社">
+<meta property="og:title" content="新笔文学社 - 用文字书写灵魂">
+<meta property="og:description" content="岳阳县第二中学新笔文学社：社员作品、社刊《年轻的心》、近期活动、在线投稿。以文会友，以笔写心。">
+<meta property="og:locale" content="zh_CN">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="新笔文学社 - 用文字书写灵魂">
+<meta name="twitter:description" content="岳阳县第二中学新笔文学社官方网站。">
+<link rel="canonical" href="https://lueuru.github.io/xinbi-basic/">
+<link rel="manifest" href="manifest.json">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%238b3a3a'/%3E%3Ctext x='32' y='43' font-size='30' text-anchor='middle' fill='%23fff' font-family='serif'%3E新%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/css/style.css">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  "name": "新笔文学社",
+  "alternateName": "Xinbi Literature Society",
+  "description": "岳阳县第二中学新笔文学社，创建于1984年，办有社刊《年轻的心》，被评为全国十佳百优文学社团。",
+  "email": "xinbiliterature@163.com",
+  "telephone": "+86-730-7632158",
+  "address": { "@type": "PostalAddress", "streetAddress": "岳阳县二中综合楼五楼" },
+  "parentOrganization": { "@type": "School", "name": "岳阳县第二中学" }
+}
+</script>
 </head>
 <body data-page="home">
 
@@ -53,6 +78,7 @@
       <a href="#home" class="active">首页</a>
       <a href="#about">关于我们</a>
       <a href="#works">作品展示</a>
+      <a href="journal.html">社刊</a>
       <a href="#events">近期活动</a>
       <a href="#members">社员风采</a>
       <a href="#submission">投稿</a>
@@ -67,6 +93,7 @@
 
 <div class="mnav" id="mobileNav">
   <a href="#home">首页</a><a href="#about">关于我们</a><a href="#works">作品展示</a>
+  <a href="journal.html">社刊</a>
   <a href="#events">近期活动</a><a href="#members">社员风采</a><a href="#submission">投稿</a>
   <a href="#literature">文学网站</a><a href="#contact">联系我们</a>
 </div>
@@ -111,7 +138,7 @@
 <section class="sec bp" id="works">
   <div class="si">
     <div class="st rv"><span class="tag">Our Works</span><h2>精选作品</h2>
-      <p class="desc">社员创作的散文、诗歌、小说与随笔（基础版本为本地示例数据）</p>
+      <p class="desc">社员创作的散文、诗歌、小说与随笔 <span class="src-badge src-loading" id="srcBadge">正在连接社团作品库…</span></p>
     </div>
     <div class="sw rv d1">
       <input type="text" id="searchInput" placeholder="搜索作品、作者或关键词..." autocomplete="off" aria-label="搜索作品">
@@ -250,6 +277,12 @@
       <a href="#" class="qr-link" data-type="qq" aria-label="QQ群"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-users"/></svg></a>
       <a href="#" aria-label="微博"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-globe"/></svg></a>
     </div>
+    <nav class="foot-links" aria-label="页脚导航">
+      <a href="index.html">首页</a>
+      <a href="journal.html">社刊《年轻的心》</a>
+      <a href="#submission">在线投稿</a>
+      <a href="#contact">联系我们</a>
+    </nav>
     <p class="copy" id="copyLine"></p>
   </div>
 </footer>
@@ -284,6 +317,14 @@
 </div>
 
 <script src="assets/js/data.js"></script>
+<script src="assets/js/config.js"></script>
 <script src="assets/js/app.js"></script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("sw.js").catch(function () {});
+  });
+}
+</script>
 </body>
 </html>

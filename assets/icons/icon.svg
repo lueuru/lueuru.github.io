@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="72" fill="#8b3a3a"/>
+  <rect x="36" y="36" width="440" height="440" rx="48" fill="none" stroke="#faf5e9" stroke-width="10" opacity="0.35"/>
+  <text x="256" y="330" font-size="240" text-anchor="middle" fill="#faf5e9" font-family="'Noto Serif SC','Songti SC',STSong,SimSun,serif" font-weight="700">新</text>
+</svg>

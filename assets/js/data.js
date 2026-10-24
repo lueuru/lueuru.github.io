@@ -263,5 +263,56 @@ window.XB_DATA = {
     hours: "周一至周日 15:00-18:00",
     wechat: "新笔文学社公众号",
     qq: "QQ群号 1015083829"
+  },
+
+  /* 社刊《年轻的心》往期回顾（示例数据） */
+  journal: {
+    name: "年轻的心",
+    intro: "《年轻的心》创刊于1984年，是新笔文学社的社刊，每期收录社员优秀作品，散文、诗歌、小说、随笔兼收。四十余年来，它记录了一届届社员的青春与笔耕，也是社团历史最直接的见证。",
+    issues: [
+      {
+        no: 48, year: 2026, term: "春", theme: "春之卷", date: "2026年4月",
+        pieces: [
+          { title: "校园的梧桐", author: "林晓萱", type: "散文", page: "P01" },
+          { title: "致春天", author: "苏婉清", type: "诗歌", page: "P12" },
+          { title: "雨后的操场", author: "王浩宇", type: "散文", page: "P18" }
+        ]
+      },
+      {
+        no: 47, year: 2025, term: "冬", theme: "岁暮集", date: "2025年12月",
+        pieces: [
+          { title: "外婆的灶台", author: "陈雨桐", type: "散文", page: "P03" },
+          { title: "夜行者", author: "李慕白", type: "诗歌", page: "P15" },
+          { title: "慢一点", author: "何俊熙", type: "随笔", page: "P22" }
+        ]
+      },
+      {
+        no: 46, year: 2025, term: "秋", theme: "远行辑", date: "2025年10月",
+        pieces: [
+          { title: "最后一课", author: "周子墨", type: "小说", page: "P05" },
+          { title: "给十年后的自己", author: "赵紫涵", type: "诗歌", page: "P19" }
+        ]
+      },
+      {
+        no: 45, year: 2025, term: "夏", theme: "长风号", date: "2025年6月",
+        pieces: [
+          { title: "星辰信箱", author: "郑语汐", type: "小说", page: "P07" },
+          { title: "读书这件事", author: "孙一诺", type: "随笔", page: "P25" }
+        ]
+      },
+      {
+        no: 44, year: 2025, term: "春", theme: "新叶集", date: "2025年4月",
+        pieces: [
+          { title: "巷口的老井", author: "吴思远", type: "小说", page: "P09" },
+          { title: "在文字里遇见自己", author: "高诗琪", type: "随笔", page: "P28" }
+        ]
+      },
+      {
+        no: 43, year: 2024, term: "冬", theme: "回声刊", date: "2024年12月",
+        pieces: [
+          { title: "年度佳作选", author: "社刊编辑部", type: "合集", page: "P01" }
+        ]
+      }
+    ]
   }
 };

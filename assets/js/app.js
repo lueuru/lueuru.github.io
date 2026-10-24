@@ -1,14 +1,22 @@
 /* ============================================================
- * 新笔文学社 · 基础版本 v0.1 —— 交互脚本
- * 纯前端、零依赖；所有“动态”能力（点赞/收藏/评论/表单/登录）
- * 均以 localStorage 做本地演示，后续可平滑替换为真实接口。
+ * 新笔文学社 · 基础版本 v0.2 —— 交互脚本
+ * 纯前端、零框架；动态能力（点赞/收藏/评论/表单/登录）以
+ * localStorage 本地演示，作品数据优先拉取社团 Supabase（只读），
+ * 失败自动回退本地示例数据。详见 README。
  * ============================================================ */
 (function () {
   "use strict";
 
   var D = window.XB_DATA;
+  var CFG = window.XB_CONFIG || {};
   var $ = function (s, el) { return (el || document).querySelector(s); };
   var $$ = function (s, el) { return Array.prototype.slice.call((el || document).querySelectorAll(s)); };
+
+  /* 运行时数据：works 可能是本地示例，也可能被远端真实数据替换 */
+  var DATA = { works: [], source: "local", remoteTried: false };
+  var PAGE_SIZE = 6;
+  var wState = { filter: "all", shown: PAGE_SIZE };
+  var curWork = null;
 
   /* ---------- 本地存储 ---------- */
   var LS = {
@@ -41,14 +49,19 @@
     if (idx < 0) return esc(t);
     return esc(t.slice(0, idx)) + '<span class="hl">' + esc(t.slice(idx, idx + q.length)) + "</span>" + esc(t.slice(idx + q.length));
   }
+  function fmtDate(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return String(iso).slice(0, 10);
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
 
-  /* 演示登录状态 */
   function curUser() { return LS.get("user", null); }
   function likes() { return LS.get("likes", []); }
   function bookmarks() { return LS.get("bookmarks", []); }
   function commentsOf(id) { return LS.get("comments", {})[String(id)] || []; }
   function workById(id) {
-    for (var i = 0; i < D.works.length; i++) if (D.works[i].id === id) return D.works[i];
+    for (var i = 0; i < DATA.works.length; i++) if (DATA.works[i].id === id) return DATA.works[i];
     return null;
   }
 
@@ -59,7 +72,7 @@
   function coverArt(w) {
     var hue = CAT_HUE[w.category] || "#8b3a3a";
     var cat = D.categories[w.category] || "作品";
-    var chars = w.title.split("");
+    var chars = String(w.title || "").split("");
     var title = chars.map(function (c, i) {
       return '<text x="342" y="' + (58 + i * 36) + '" font-size="29" fill="' + hue + '" text-anchor="middle">' + esc(c) + "</text>";
     }).join("");
@@ -71,31 +84,123 @@
       '<rect x="26" y="212" width="42" height="42" rx="3" fill="#8b3a3a"/>' +
       '<text x="47" y="240" font-size="19" fill="#f6efe0" text-anchor="middle">' + esc(cat.charAt(0)) + "</text>" +
       '<text x="82" y="242" font-size="15" fill="#5c5040">' + esc(cat) + "</text>" +
-      '<text x="26" y="280" font-size="13" fill="#8b7e6c">' + esc(w.author) + " · " + esc(w.grade) + esc(w.class_name) + "班</text>" +
+      '<text x="26" y="280" font-size="13" fill="#8b7e6c">' + esc(w.author || "") + (w.grade ? " · " + esc(w.grade) + esc(w.class_name || "") + "班" : "") + "</text>" +
       title +
       "</svg>";
   }
 
-  /* ---------- 作品列表 ---------- */
-  var PAGE_SIZE = 6;
-  var wState = { filter: "all", shown: PAGE_SIZE };
+  /* ============================================================
+   * 远端数据（Supabase 只读）
+   * ============================================================ */
+  function normalizeRemoteWork(w) {
+    var content = [];
+    if (Array.isArray(w.content)) content = w.content;
+    else if (typeof w.content === "string") {
+      content = w.content.split(/\r?\n\s*\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+    }
+    var cat = ["prose", "poetry", "fiction", "essay"].indexOf(w.category) > -1 ? w.category : "essay";
+    return {
+      id: w.id,
+      title: w.title || "无题",
+      author: w.author || "佚名",
+      grade: w.grade || "",
+      class_name: w.class_name || "",
+      category: cat,
+      tags: [],
+      rating: 0,
+      excerpt: w.excerpt || (content[0] || "").slice(0, 90),
+      content: content.length ? content : ["（正文待补充）"],
+      likes: w.likes || 0,
+      bookmarks: w.bookmarks || 0,
+      created_at: w.created_at || "",
+      remote: true
+    };
+  }
 
+  function setSourceBadge() {
+    var b = $("#srcBadge");
+    if (!b) return;
+    if (DATA.source === "remote") {
+      b.textContent = "数据来源：社团作品库（实时）";
+      b.className = "src-badge src-on";
+    } else {
+      b.textContent = "数据来源：本地示例数据";
+      b.className = "src-badge";
+    }
+  }
+
+  function loadRemoteWorks() {
+    if (DATA.remoteTried) return Promise.resolve(DATA.source === "remote");
+    DATA.remoteTried = true;
+    if (!CFG.enableRemote || !CFG.supabaseUrl || !CFG.anonKey) {
+      setSourceBadge();
+      return Promise.resolve(false);
+    }
+    var ctrl = "AbortController" in window ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, CFG.timeoutMs || 7000);
+    var url = CFG.supabaseUrl + "/rest/v1/works?select=id,title,author,grade,class_name,category,excerpt,image_url,likes,bookmarks,created_at,content&order=created_at.desc&limit=100";
+    return fetch(url, { headers: { apikey: CFG.anonKey }, signal: ctrl ? ctrl.signal : undefined })
+      .then(function (r) {
+        clearTimeout(timer);
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      })
+      .then(function (list) {
+        if (Array.isArray(list) && list.length) {
+          DATA.works = list.map(normalizeRemoteWork);
+          DATA.source = "remote";
+        }
+        setSourceBadge();
+        return DATA.source === "remote";
+      })
+      .catch(function () {
+        clearTimeout(timer);
+        setSourceBadge();
+        return false;
+      });
+  }
+
+  function showSkeleton() {
+    var grid = $("#worksGrid");
+    if (!grid) return;
+    var s = "";
+    for (var i = 0; i < PAGE_SIZE; i++) {
+      s += '<div class="sk-card"><div class="sk-art"></div><div class="sk-line"></div><div class="sk-line short"></div></div>';
+    }
+    grid.innerHTML = s;
+    var wrap = $("#loadMoreWrap");
+    if (wrap) wrap.innerHTML = "";
+  }
+
+  /* ============================================================
+   * 作品列表
+   * ============================================================ */
   function matchWorks() {
-    return D.works.filter(function (w) {
+    return DATA.works.filter(function (w) {
       return wState.filter === "all" || w.category === wState.filter;
     });
+  }
+
+  function stars(r) {
+    var full = Math.round(r / 2);
+    var h = "";
+    for (var i = 0; i < 5; i++) h += '<span class="star' + (i < full ? " on" : "") + '" aria-hidden="true">★</span>';
+    return '<span class="stars" role="img" aria-label="评分 ' + r.toFixed(1) + ' 分">' + h + "</span>";
   }
 
   function workCard(w, i) {
     var liked = likes().indexOf(w.id) > -1;
     var bmed = bookmarks().indexOf(w.id) > -1;
+    var metaLine = w.remote && !w.rating
+      ? '<span class="wc-date">' + esc(fmtDate(w.created_at)) + "</span>"
+      : (w.rating ? '<span class="rating-num">' + w.rating.toFixed(1) + "</span>" + stars(w.rating) : "");
     return '<div class="wc rv d' + ((i % 4) + 1) + '" data-id="' + w.id + '">' +
       '<div class="wci">' + coverArt(w) + '<span class="wcbadge">' + esc(D.categories[w.category] || "") + "</span></div>" +
       '<div class="wcb">' +
       "<h3>" + esc(w.title) + "</h3>" +
-      '<div class="wcm">' + esc(w.grade) + " · " + esc(w.class_name) + "班 · " + esc(w.author) + "</div>" +
+      '<div class="wcm">' + esc(w.grade) + (w.class_name ? esc(w.class_name) + "班 · " : " · ") + esc(w.author) + "</div>" +
       '<p class="wce">' + esc(w.excerpt) + "</p>" +
-      '<div class="wcs">' +
+      '<div class="wcs">' + metaLine +
       '<button type="button" class="like-btn' + (liked ? " liked" : "") + '" data-id="' + w.id + '" aria-label="点赞">' + icon("heart", liked) + ' <span class="n">' + (w.likes + (liked ? 1 : 0)) + "</span></button>" +
       '<button type="button" class="bookmark-btn' + (bmed ? " liked" : "") + '" data-id="' + w.id + '" aria-label="收藏">' + icon("bookmark", bmed) + ' <span class="n">' + (w.bookmarks + (bmed ? 1 : 0)) + "</span></button>" +
       "</div></div></div>";
@@ -108,16 +213,17 @@
     if (!grid) return;
     if (!list.length) {
       grid.innerHTML = '<p class="empty-grid">该分类下暂无作品，换个分类看看。</p>';
-      $("#loadMoreWrap").innerHTML = "";
+      var w0 = $("#loadMoreWrap");
+      if (w0) w0.innerHTML = "";
       return;
     }
     grid.innerHTML = list.slice(0, wState.shown).map(workCard).join("");
     var wrap = $("#loadMoreWrap");
     if (list.length > wState.shown) {
       wrap.innerHTML = '<button type="button" class="btn btn-l" id="loadMoreBtn">加载更多作品（还有 ' + (list.length - wState.shown) + " 篇）</button>";
-      $("#loadMoreBtn").addEventListener("click", function () { renderWorks(false); observeReveals(); });
+      on("#loadMoreBtn", "click", function () { renderWorks(false); observeReveals(); });
     } else {
-      wrap.innerHTML = list.length > PAGE_SIZE ? '<p style="color:var(--ink-3);font-size:.85rem">已展示全部 ' + list.length + " 篇作品</p>" : "";
+      wrap.innerHTML = list.length > PAGE_SIZE ? '<p class="works-all">已展示全部 ' + list.length + " 篇作品</p>" : "";
     }
     observeReveals();
   }
@@ -166,17 +272,17 @@
     toast(i > -1 ? "已取消收藏" : "已加入收藏");
   }
 
-  /* ---------- 作品弹窗 ---------- */
-  var curWork = null;
-
+  /* ============================================================
+   * 作品弹窗（首页）
+   * ============================================================ */
   function openWork(id) {
     var w = workById(id);
-    if (!w) return;
+    if (!w) { toast("作品不存在或数据尚未加载", "err"); return; }
     curWork = w;
     var liked = likes().indexOf(id) > -1;
     var bmed = bookmarks().indexOf(id) > -1;
     $("#mTitle").textContent = w.title;
-    $("#mMeta").textContent = w.grade + " · " + w.class_name + "班 · " + w.author + " · " + (D.categories[w.category] || "");
+    $("#mMeta").textContent = (w.grade ? w.grade + (w.class_name ? w.class_name + "班" : "") + " · " : "") + w.author + " · " + (D.categories[w.category] || "") + (w.created_at ? " · " + fmtDate(w.created_at) : "");
     $("#mart").innerHTML = coverArt(w);
     $("#mBody").innerHTML = w.content.map(function (p) { return p ? "<p>" + esc(p) + "</p>" : ""; }).join("");
     $("#mLikeBtn").className = "mact" + (liked ? " on" : "");
@@ -189,11 +295,15 @@
   }
 
   function closeModal() {
-    $("#articleModal").classList.remove("open");
+    var m = $("#articleModal");
+    if (m) m.classList.remove("open");
     document.body.style.overflow = "";
     curWork = null;
   }
 
+  /* ============================================================
+   * 评论（localStorage 演示）
+   * ============================================================ */
   function renderComments(id) {
     var section = $("#comments-section");
     if (!section) return;
@@ -205,7 +315,7 @@
         return '<div class="comment-item"><strong>' + esc(c.name) + '</strong><span class="cmt-time">' + esc(c.time) + '</span><div class="cmt-content">' + esc(c.content) + "</div></div>";
       }).join("");
     } else {
-      html += '<p style="color:var(--ink-3);font-size:.85rem;padding:6px 0">还没有评论，来发表第一条吧。</p>';
+      html += '<p class="cmt-empty">还没有评论，来发表第一条吧。</p>';
     }
     if (u) {
       html += '<div class="cmt-input-row"><input id="cmtInput" placeholder="写下你的评论..." maxlength="200"><button type="button" class="btn btn-d" id="cmtPostBtn">发表</button></div>';
@@ -213,8 +323,8 @@
       html += '<p class="cmt-login-hint">演示登录后即可评论 → <a href="login.html">去登录</a></p>';
     }
     section.innerHTML = html;
-    var btn = $("#cmtPostBtn");
-    if (btn) btn.addEventListener("click", postComment);
+    on("#cmtPostBtn", "click", postComment);
+    on("#cmtInput", "keydown", function (e) { if (e.key === "Enter") postComment(); });
   }
 
   function postComment() {
@@ -222,6 +332,7 @@
     if (!inp || !inp.value.trim()) { toast("请先输入评论内容", "err"); return; }
     var u = curUser();
     if (!u) { toast("请先登录", "err"); return; }
+    if (!curWork) { toast("评论失败：未选择作品", "err"); return; }
     var all = LS.get("comments", {});
     var key = String(curWork.id);
     if (!all[key]) all[key] = [];
@@ -231,11 +342,14 @@
     toast("评论已发表");
   }
 
-  /* ---------- 个人主页（演示） ---------- */
+  /* ============================================================
+   * 个人主页（演示）
+   * ============================================================ */
   function showProfile() {
     var u = curUser();
     if (!u) return;
-    $("#userDropdown").classList.remove("show");
+    var d = $("#userDropdown");
+    if (d) d.classList.remove("show");
     $("#mTitle").textContent = "我的主页";
     $("#mMeta").textContent = "演示账号 · 数据保存在本机浏览器";
     $("#mart").innerHTML = "";
@@ -244,25 +358,28 @@
     var c = 0;
     Object.keys(cAll).forEach(function (k) { c += cAll[k].length; });
     $("#mBody").innerHTML =
-      '<div style="text-align:center;padding:18px 0">' +
-      '<div style="width:76px;height:76px;border-radius:50%;background:var(--red);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:1.8rem;margin-bottom:12px">' + esc(u.name.charAt(0)) + "</div>" +
+      '<div class="pf-head">' +
+      '<div class="pf-av">' + esc(u.name.charAt(0)) + "</div>" +
       "<h3>" + esc(u.name) + "</h3>" +
-      '<p style="color:var(--ink-3);font-size:.85rem">' + esc(u.email || "") + "</p></div>" +
-      '<div style="display:flex;gap:20px;justify-content:center;padding:14px 0;border-top:1px solid var(--line)">' +
+      '<p class="pf-mail">' + esc(u.email || "") + "</p></div>" +
+      '<div class="pf-stats">' +
       "<div><strong>" + l + "</strong><br><small>点赞</small></div>" +
       "<div><strong>" + b + "</strong><br><small>收藏</small></div>" +
       "<div><strong>" + c + "</strong><br><small>评论</small></div></div>" +
-      '<p style="font-size:.78rem;color:var(--ink-3);margin-top:10px">基础版本为本地演示：点赞、收藏、评论与投稿记录均保存在本机 localStorage，清缓存或换设备后会重置。</p>';
-    $("#comments-section").innerHTML = "";
-    $("#mLikeBtn").className = "mact";
-    $("#mLikeBtn").innerHTML = "";
-    $("#mBookmarkBtn").className = "mact";
-    $("#mBookmarkBtn").innerHTML = "";
+      '<p class="pf-note">基础版本为本地演示：点赞、收藏、评论与投稿记录均保存在本机 localStorage，清除浏览器数据后重置。</p>';
+    var cs = $("#articleModal #comments-section");
+    if (cs) cs.innerHTML = "";
+    var lb = $("#mLikeBtn");
+    if (lb) { lb.className = "mact"; lb.innerHTML = ""; }
+    var bb = $("#mBookmarkBtn");
+    if (bb) { bb.className = "mact"; bb.innerHTML = ""; }
     $("#articleModal").classList.add("open");
     document.body.style.overflow = "hidden";
   }
 
-  /* ---------- 搜索下拉 ---------- */
+  /* ============================================================
+   * 搜索下拉
+   * ============================================================ */
   function bindSearch() {
     var inp = $("#searchInput"), res = $("#searchR");
     if (!inp || !res) return;
@@ -275,13 +392,13 @@
       res.classList.add("show");
       timer = setTimeout(function () {
         var ql = q.toLowerCase();
-        var list = D.works.filter(function (w) {
+        var list = DATA.works.filter(function (w) {
           var hay = (w.title + " " + w.author + " " + w.excerpt + " " + w.grade + " " + w.class_name + " " + (D.categories[w.category] || "")).toLowerCase();
           return hay.indexOf(ql) > -1;
         }).slice(0, 8);
         if (!list.length) { res.innerHTML = '<div class="hint">没有找到匹配的作品</div>'; return; }
         res.innerHTML = list.map(function (w) {
-          return '<div class="item" data-id="' + w.id + '"><div class="tt">' + hl(w.title, q) + '</div><div class="mm">' + hl(w.grade + " · " + w.class_name + "班 · " + w.author, q) + "</div></div>";
+          return '<div class="item" data-id="' + w.id + '"><div class="tt">' + hl(w.title, q) + '</div><div class="mm">' + hl((w.grade || "") + (w.class_name ? w.class_name + "班" : "") + " · " + w.author, q) + "</div></div>";
         }).join("");
       }, 220);
     });
@@ -297,7 +414,9 @@
     });
   }
 
-  /* ---------- 近期活动（日期动态推算 + 倒计时） ---------- */
+  /* ============================================================
+   * 近期活动（日期动态推算 + 倒计时）
+   * ============================================================ */
   function renderEvents() {
     var box = $("#eventsList");
     if (!box) return;
@@ -339,7 +458,9 @@
     });
   }
 
-  /* ---------- 社员 / 门户 / 联系 ---------- */
+  /* ============================================================
+   * 社员 / 门户 / 文案 / 联系
+   * ============================================================ */
   function renderMembers() {
     var box = $("#membersGrid");
     if (!box) return;
@@ -367,7 +488,26 @@
     observeReveals();
   }
 
-  /* ---------- 表单（本地演示提交） ---------- */
+  function renderTexts() {
+    var sub = $("#heroSub");
+    if (sub) sub.textContent = D.site.intro;
+    var at = $("#aboutText");
+    if (at) {
+      at.innerHTML = D.site.about.map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("") +
+        '<a href="#contact" class="btn btn-d" style="margin-top:10px">了解更多</a>';
+    }
+    var c = D.contact;
+    var set = function (id, v) { var el = $(id); if (el) el.textContent = v; };
+    set("#cAddress", c.address);
+    set("#cEmail", c.email);
+    set("#cPhone", c.phone);
+    set("#cHours", c.hours);
+    set("#copyLine", D.site.copyright + " | 基础版本 v0.2 · 本地演示");
+  }
+
+  /* ============================================================
+   * 表单（本地演示提交）
+   * ============================================================ */
   function bindForm(formSel, okSel, key, okMsg, btnLabel) {
     var form = $(formSel);
     if (!form) return;
@@ -394,7 +534,9 @@
     });
   }
 
-  /* ---------- 二维码弹窗 ---------- */
+  /* ============================================================
+   * 二维码弹窗
+   * ============================================================ */
   function openQr(type) {
     var isWx = type === "wechat";
     var seed = isWx ? 7 : 13;
@@ -407,14 +549,16 @@
       }
     }
     $("#qrContent").innerHTML =
-      "<h3 style=\"color:var(--red);margin-bottom:14px\">" + (isWx ? "关注微信公众号" : "加入QQ交流群") + "</h3>" +
+      '<h3 class="qr-title">' + (isWx ? "关注微信公众号" : "加入QQ交流群") + "</h3>" +
       '<div class="qr-pattern">' + cells + "</div>" +
-      '<p style="font-size:.85rem;color:var(--ink-2)">' + esc(isWx ? D.contact.wechat : D.contact.qq) + "</p>";
+      '<p class="qr-desc">' + esc(isWx ? D.contact.wechat : D.contact.qq) + "</p>";
     $("#qrModal").classList.add("open");
     document.body.style.overflow = "hidden";
   }
 
-  /* ---------- 用户菜单 ---------- */
+  /* ============================================================
+   * 用户菜单
+   * ============================================================ */
   function renderUserUI() {
     var u = curUser();
     var d = $("#userDropdown");
@@ -443,7 +587,101 @@
     });
   }
 
-  /* ---------- 滚动 / 导航 / 主题 ---------- */
+  /* ============================================================
+   * 作品详情页（work.html）
+   * ============================================================ */
+  function renderWorkPage() {
+    var id = parseInt(new URLSearchParams(location.search).get("id") || "0", 10);
+    var wrap = $("#wkWrap");
+    if (!wrap) return;
+
+    function notFound() {
+      var ld = $("#wkLoading");
+      if (ld) ld.style.display = "none";
+      wrap.innerHTML = '<p class="empty">未找到该作品，可能链接有误。返回 <a href="index.html#works">作品展示</a> 看看。</p>';
+      wrap.style.display = "block";
+    }
+
+    function paint(w) {
+      curWork = w;
+      document.title = w.title + " · 新笔文学社";
+      var liked = likes().indexOf(w.id) > -1;
+      var bmed = bookmarks().indexOf(w.id) > -1;
+      var idx = DATA.works.indexOf(w);
+      var prev = idx > 0 ? DATA.works[idx - 1] : null;
+      var next = idx > -1 && idx < DATA.works.length - 1 ? DATA.works[idx + 1] : null;
+
+      $("#wkTitle").textContent = w.title;
+      $("#wkMeta").textContent = (w.grade ? w.grade + (w.class_name ? w.class_name + "班" : "") + " · " : "") + w.author + " · " + (D.categories[w.category] || "") + (w.created_at ? " · " + fmtDate(w.created_at) : "");
+      $("#wkArt").innerHTML = coverArt(w);
+      $("#wkBody").innerHTML = w.content.map(function (p) { return p ? "<p>" + esc(p) + "</p>" : ""; }).join("");
+      $("#wkActions").innerHTML =
+        '<button type="button" class="like-btn' + (liked ? " liked" : "") + '" data-id="' + w.id + '">' + icon("heart", liked) + ' <span class="n">' + (w.likes + (liked ? 1 : 0)) + "</span> 喜欢</button>" +
+        '<button type="button" class="bookmark-btn' + (bmed ? " liked" : "") + '" data-id="' + w.id + '">' + icon("bookmark", bmed) + ' <span class="n">' + (w.bookmarks + (bmed ? 1 : 0)) + "</span> 收藏</button>";
+      renderComments(w.id);
+
+      var navHtml = "";
+      navHtml += prev ? '<a class="btn btn-l sm" href="work.html?id=' + prev.id + '">← ' + esc(prev.title) + "</a>" : "<span></span>";
+      navHtml += next ? '<a class="btn btn-l sm" href="work.html?id=' + next.id + '">' + esc(next.title) + " →</a>" : "<span></span>";
+      $("#wkNav").innerHTML = navHtml;
+
+      var rel = DATA.works.filter(function (x) { return x.id !== w.id && x.category === w.category; });
+      if (rel.length < 2) {
+        DATA.works.forEach(function (x) {
+          if (x.id !== w.id && rel.indexOf(x) < 0 && rel.length < 3) rel.push(x);
+        });
+      }
+      var relBox = $("#wkRelated");
+      if (relBox) {
+        relBox.innerHTML = rel.map(function (x) {
+          return '<a class="spine" href="work.html?id=' + x.id + '" title="《' + esc(x.title) + '》"><div class="cover-wrap">' + coverArt(x) + "</div></a>";
+        }).join("");
+      }
+      wrap.style.display = "block";
+      var ld = $("#wkLoading");
+      if (ld) ld.style.display = "none";
+      observeReveals();
+    }
+
+    var w = workById(id);
+    if (w) { paint(w); return; }
+    if (DATA.remoteTried || !CFG.enableRemote) { notFound(); return; }
+    loadRemoteWorks().then(function () {
+      var w2 = workById(id);
+      if (w2) paint(w2); else notFound();
+    });
+  }
+
+  /* ============================================================
+   * 社刊往期页（journal.html）
+   * ============================================================ */
+  function renderJournal() {
+    var box = $("#journalList");
+    if (!box) return;
+    var j = D.journal;
+    var intro = $("#journalIntro");
+    if (intro) intro.textContent = j.intro;
+    box.innerHTML = j.issues.map(function (is, i) {
+      return '<div class="jissue rv d' + ((i % 4) + 1) + '">' +
+        '<div class="jno"><span class="jno-n">第' + is.no + '期</span><span class="jno-d">' + esc(is.date) + " · " + esc(is.term) + "之卷</span></div>" +
+        '<div class="jbody"><h3>' + esc(is.theme) + "</h3>" +
+        '<ul class="jpieces">' + is.pieces.map(function (p) {
+          return "<li><span class=\"jp-t\">" + esc(p.title) + '</span><span class="jp-m">' + esc(p.author) + " · " + esc(p.type) + '</span><span class="jp-p">' + esc(p.page) + "</span></li>";
+        }).join("") + "</ul>" +
+        '<span class="btn btn-l sm jdl">下载本期 PDF（演示）</span>' +
+        "</div></div>";
+    }).join("");
+    $$(".jdl").forEach(function (b) {
+      b.addEventListener("click", function () { toast("演示版本：社刊 PDF 尚未接入", "err"); });
+    });
+    observeReveals();
+  }
+
+  /* ============================================================
+   * 滚动 / 导航 / 主题
+   * ============================================================ */
+  function on(id, ev, fn) { var el = $(id); if (el) el.addEventListener(ev, fn); }
+
   function bindChrome() {
     var header = $("#header"), pbar = $("#pbar"), btop = $("#backTop");
     var links = $$(".nav-links a, .mnav a");
@@ -468,7 +706,6 @@
     window.addEventListener("scroll", onScroll, { passive: true });
     onScroll();
 
-    /* 移动端菜单 */
     var mb = $("#menuBtn"), mn = $("#mobileNav");
     if (mb && mn) {
       var open = false;
@@ -488,7 +725,6 @@
       });
     }
 
-    /* 用户菜单 */
     var ub = $("#userBtn"), ud = $("#userDropdown");
     if (ub && ud) {
       ub.addEventListener("click", function (e) { e.stopPropagation(); ud.classList.toggle("show"); });
@@ -497,10 +733,8 @@
       });
     }
 
-    /* 回到顶部 */
-    if (btop) btop.addEventListener("click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
+    on("#backTop", "click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
 
-    /* 深色模式 */
     var darkOn = LS.get("dark", "0") === "1";
     var dk = $("#darkToggle");
     function applyDark() {
@@ -508,7 +742,7 @@
       if (dk) dk.innerHTML = icon(darkOn ? "sun" : "moon");
       LS.set("dark", darkOn ? "1" : "0");
     }
-    if (dk) dk.addEventListener("click", function () { darkOn = !darkOn; applyDark(); });
+    on("#darkToggle", "click", function () { darkOn = !darkOn; applyDark(); });
     applyDark();
   }
 
@@ -546,7 +780,8 @@
       }
     }
     var el = $("#heroTitle");
-    if (el) {
+    if (el && !el.dataset.done) {
+      el.dataset.done = "1";
       var t = el.textContent;
       el.textContent = "";
       for (var i = 0; i < t.length; i++) {
@@ -559,27 +794,31 @@
     }
   }
 
-  /* ---------- 弹窗绑定 ---------- */
+  /* ---------- 弹窗与全局委托 ---------- */
   function bindModals() {
-    $("#modalClose").addEventListener("click", closeModal);
-    $("#articleModal").addEventListener("click", function (e) { if (e.target === this) closeModal(); });
-    $("#qrClose").addEventListener("click", function () {
-      $("#qrModal").classList.remove("open");
+    on("#modalClose", "click", closeModal);
+    var am = $("#articleModal");
+    if (am) am.addEventListener("click", function (e) { if (e.target === this) closeModal(); });
+    on("#qrClose", "click", function () {
+      var q = $("#qrModal");
+      if (q) q.classList.remove("open");
       document.body.style.overflow = "";
     });
-    $("#qrModal").addEventListener("click", function (e) {
+    var qm = $("#qrModal");
+    if (qm) qm.addEventListener("click", function (e) {
       if (e.target === this) { this.classList.remove("open"); document.body.style.overflow = ""; }
     });
     document.addEventListener("keydown", function (e) {
       if (e.key === "Escape") {
         closeModal();
-        $("#qrModal").classList.remove("open");
+        var q = $("#qrModal");
+        if (q) q.classList.remove("open");
         document.body.style.overflow = "";
       }
     });
-    $("#mLikeBtn").addEventListener("click", function () { if (curWork) toggleLike(curWork.id); });
-    $("#mBookmarkBtn").addEventListener("click", function () { if (curWork) toggleBookmark(curWork.id); });
-    $("#mCommentBtn").addEventListener("click", function () {
+    on("#mLikeBtn", "click", function () { if (curWork) toggleLike(curWork.id); });
+    on("#mBookmarkBtn", "click", function () { if (curWork) toggleBookmark(curWork.id); });
+    on("#mCommentBtn", "click", function () {
       var inp = $("#cmtInput");
       if (inp) { inp.focus(); inp.scrollIntoView({ behavior: "smooth", block: "center" }); }
       else toast("请先登录后再评论", "err");
@@ -589,18 +828,26 @@
     });
   }
 
-  /* ---------- 作品卡片事件（委托） ---------- */
+  /* 点赞 / 收藏：全局委托（列表、弹窗、详情页共用） */
+  function bindWorkActions() {
+    document.addEventListener("click", function (e) {
+      var lb = e.target.closest(".like-btn");
+      if (lb && lb.dataset.id) { toggleLike(parseInt(lb.dataset.id, 10)); return; }
+      var bb = e.target.closest(".bookmark-btn");
+      if (bb && bb.dataset.id) { toggleBookmark(parseInt(bb.dataset.id, 10)); }
+    });
+  }
+
   function bindWorksEvents() {
     var grid = $("#worksGrid");
-    if (!grid) return;
-    grid.addEventListener("click", function (e) {
-      var lb = e.target.closest(".like-btn");
-      if (lb) { e.stopPropagation(); toggleLike(parseInt(lb.dataset.id, 10)); return; }
-      var bb = e.target.closest(".bookmark-btn");
-      if (bb) { e.stopPropagation(); toggleBookmark(parseInt(bb.dataset.id, 10)); return; }
-      var card = e.target.closest(".wc");
-      if (card) openWork(parseInt(card.dataset.id, 10));
-    });
+    if (grid) {
+      grid.addEventListener("click", function (e) {
+        var card = e.target.closest(".wc");
+        if (card && !e.target.closest(".like-btn") && !e.target.closest(".bookmark-btn")) {
+          openWork(parseInt(card.dataset.id, 10));
+        }
+      });
+    }
     $$("#filtersB button").forEach(function (b) {
       b.addEventListener("click", function () {
         $$("#filtersB button").forEach(function (x) { x.classList.remove("on"); });
@@ -611,41 +858,45 @@
     });
   }
 
-  /* ---------- 文案与联系信息 ---------- */
-  function renderTexts() {
-    var sub = $("#heroSub");
-    if (sub) sub.textContent = D.site.intro;
-    var at = $("#aboutText");
-    if (at) {
-      at.innerHTML = D.site.about.map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("") +
-        '<a href="#contact" class="btn btn-d" style="margin-top:10px">了解更多</a>';
-    }
-    var c = D.contact;
-    $("#cAddress").textContent = c.address;
-    $("#cEmail").textContent = c.email;
-    $("#cPhone").textContent = c.phone;
-    $("#cHours").textContent = c.hours;
-    $("#copyLine").textContent = D.site.copyright + " | 基础版本 v0.1 · 本地演示";
-  }
-
-  /* ---------- 启动 ---------- */
+  /* ============================================================
+   * 启动
+   * ============================================================ */
   function init() {
-    renderTexts();
+    DATA.works = D.works.slice();
+    var page = document.body.getAttribute("data-page");
+
     renderUserUI();
-    renderWorks(true);
-    renderEvents();
-    renderMembers();
-    renderPortals();
-    bindSearch();
-    bindWorksEvents();
-    bindModals();
     bindChrome();
     bindHero();
-    bindForm("#subForm", "#subOk", "submissions", "投稿已提交，我们将尽快审核（本地演示）", "提交投稿");
-    bindForm("#memForm", "#memOk", "applications", "申请已提交，我们将尽快与您联系（本地演示）", "提交申请");
+    bindWorkActions();
+    bindModals();
     observeReveals();
-    var y = $("#year");
-    if (y) y.textContent = new Date().getFullYear();
+
+    if (page === "index") {
+      renderTexts();
+      renderWorks(true);
+      renderEvents();
+      renderMembers();
+      renderPortals();
+      bindSearch();
+      bindWorksEvents();
+      bindForm("#subForm", "#subOk", "submissions", "投稿已提交，我们将尽快审核（本地演示）", "提交投稿");
+      bindForm("#memForm", "#memOk", "applications", "申请已提交，我们将尽快与您联系（本地演示）", "提交申请");
+      var badge = $("#srcBadge");
+      if (badge) { badge.textContent = "正在连接社团作品库…"; badge.className = "src-badge src-loading"; }
+      showSkeleton();
+      loadRemoteWorks().then(function (remote) {
+        renderWorks(true);
+        if (remote) toast("已加载社团作品库真实数据");
+      });
+    }
+    if (page === "work") renderWorkPage();
+    if (page === "journal") renderJournal();
+
+    if (page === "index" || page === "work" || page === "journal") {
+      var y = $("#year");
+      if (y) y.textContent = new Date().getFullYear();
+    }
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
