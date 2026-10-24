@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>登录 / 注册 - 新笔文学社</title>
+<meta name="description" content="新笔文学社演示登录页">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%238b3a3a'/%3E%3Ctext x='32' y='43' font-size='30' text-anchor='middle' fill='%23fff' font-family='serif'%3E新%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-page="login">
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-feather" viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></symbol>
+</svg>
+
+<div class="login-page">
+  <div class="login-card rv on">
+    <a href="index.html" class="logo">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-feather"/></svg>
+      <span>新笔文学社</span>
+    </a>
+    <p class="login-sub">用文字书写灵魂</p>
+
+    <div class="login-tabs">
+      <button type="button" class="on" id="tabLogin">登录</button>
+      <button type="button" id="tabReg">注册</button>
+    </div>
+
+    <form id="loginForm" novalidate>
+      <div class="fg" id="nameField" style="display:none">
+        <label for="nick">昵称</label>
+        <input type="text" id="nick" placeholder="取个笔名吧">
+      </div>
+      <div class="fg">
+        <label for="email">邮箱</label>
+        <input type="email" id="email" placeholder="请输入邮箱" required>
+      </div>
+      <div class="fg">
+        <label for="pwd">密码</label>
+        <input type="password" id="pwd" placeholder="请输入密码" required>
+      </div>
+      <button type="submit" class="btn btn-d" style="width:100%" id="submitBtn">登 录</button>
+    </form>
+
+    <div class="login-note">
+      基础版本说明：本页为<b>本地演示登录</b>，不连接真实后台。提交后仅在本机浏览器保存一个演示身份，用于体验作品点赞、评论等功能；清除浏览器数据后即失效。
+    </div>
+    <a class="login-back" href="index.html">← 返回首页</a>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var mode = "login";
+  var tabLogin = document.getElementById("tabLogin");
+  var tabReg = document.getElementById("tabReg");
+  var nameField = document.getElementById("nameField");
+  var submitBtn = document.getElementById("submitBtn");
+  var toast = document.createElement("div");
+  toast.className = "toast";
+  document.body.appendChild(toast);
+  function showToast(m) {
+    toast.textContent = m;
+    toast.className = "toast toast-ok show";
+    setTimeout(function () { toast.classList.remove("show"); }, 2000);
+  }
+  function setMode(m) {
+    mode = m;
+    tabLogin.classList.toggle("on", m === "login");
+    tabReg.classList.toggle("on", m === "reg");
+    nameField.style.display = m === "reg" ? "block" : "none";
+    submitBtn.textContent = m === "reg" ? "注 册" : "登 录";
+  }
+  tabLogin.addEventListener("click", function () { setMode("login"); });
+  tabReg.addEventListener("click", function () { setMode("reg"); });
+
+  document.getElementById("loginForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var email = document.getElementById("email").value.trim();
+    var nick = document.getElementById("nick").value.trim();
+    if (!email || !document.getElementById("pwd").value) {
+      showToast("请填写邮箱和密码");
+      return;
+    }
+    var name = mode === "reg" && nick ? nick : email.split("@")[0];
+    try {
+      localStorage.setItem("xb_user", JSON.stringify({ name: name, email: email }));
+    } catch (err) {}
+    showToast(mode === "reg" ? "注册成功，正在进入..." : "登录成功，正在进入...");
+    setTimeout(function () { window.location.href = "index.html"; }, 700);
+  });
+})();
+</script>
+</body>
+</html>

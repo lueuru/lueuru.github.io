@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>新笔文学社 - 用文字书写灵魂</title>
+<meta name="description" content="岳阳县第二中学新笔文学社官方网站：社员作品、近期活动、社团风采、在线投稿。以文会友，以笔写心。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%238b3a3a'/%3E%3Ctext x='32' y='43' font-size='30' text-anchor='middle' fill='%23fff' font-family='serif'%3E新%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body data-page="home">
+
+<!-- 阅读进度条 & 轻提示 -->
+<div class="pbar" id="pbar"></div>
+<div class="toast" id="toastEl" role="status" aria-live="polite"></div>
+
+<!-- SVG 图标精灵 -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-feather" viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></symbol>
+    <symbol id="i-heart-f" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></symbol>
+    <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-bookmark-f" viewBox="0 0 24 24"><path fill="currentColor" stroke="none" d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></symbol>
+    <symbol id="i-comment" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></symbol>
+    <symbol id="i-arrow-up" viewBox="0 0 24 24"><line x1="12" y1="19" x2="12" y2="5"/><polyline points="5 12 12 5 19 12"/></symbol>
+    <symbol id="i-arrow-right" viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></symbol>
+    <symbol id="i-mail" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></symbol>
+    <symbol id="i-phone" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></symbol>
+    <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></symbol>
+    <symbol id="i-message" viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></symbol>
+    <symbol id="i-users" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+    <symbol id="i-pen" viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></symbol>
+  </defs>
+</svg>
+
+<!-- ===================== 头部 ===================== -->
+<header class="header" id="header">
+  <a href="#home" class="logo">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-feather"/></svg>
+    <span>新笔文学社</span>
+  </a>
+  <div class="head-right">
+    <nav class="nav-links" aria-label="主导航">
+      <a href="#home" class="active">首页</a>
+      <a href="#about">关于我们</a>
+      <a href="#works">作品展示</a>
+      <a href="#events">近期活动</a>
+      <a href="#members">社员风采</a>
+      <a href="#submission">投稿</a>
+      <a href="#literature">文学网站</a>
+      <a href="#contact">联系我们</a>
+    </nav>
+    <button class="ubtn" id="userBtn" title="登录 / 注册" aria-label="用户菜单"></button>
+    <div class="udrop" id="userDropdown"></div>
+    <button class="mbtn" id="menuBtn" aria-label="打开菜单"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<div class="mnav" id="mobileNav">
+  <a href="#home">首页</a><a href="#about">关于我们</a><a href="#works">作品展示</a>
+  <a href="#events">近期活动</a><a href="#members">社员风采</a><a href="#submission">投稿</a>
+  <a href="#literature">文学网站</a><a href="#contact">联系我们</a>
+</div>
+
+<!-- ===================== 幕头 ===================== -->
+<section class="hero" id="home">
+  <div class="herop" id="herop" aria-hidden="true"></div>
+  <div class="hc">
+    <div class="seal-row"><span>全国十佳百优文学社团</span><span>湖南省优秀文学社团</span></div>
+    <h1 id="heroTitle">用文字书写灵魂</h1>
+    <p class="sub" id="heroSub"></p>
+    <div class="btns">
+      <a href="#contact" class="btn btn-d">加入我们</a>
+      <a href="#works" class="btn btn-l">阅读作品</a>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 关于我们 ===================== -->
+<section class="sec bw" id="about">
+  <div class="si">
+    <div class="st rv"><span class="tag">About Us</span><h2>关于我们</h2></div>
+    <div class="ag">
+      <div class="rl d1" id="aboutText"></div>
+      <div class="art-panel rr d2">
+        <svg viewBox="0 0 400 300" aria-hidden="true">
+          <circle cx="298" cy="72" r="34" fill="none" stroke="currentColor" stroke-width="2" opacity="0.55"/>
+          <path d="M18 242 Q92 118 162 202 T302 188 T382 232" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+          <path d="M42 262 Q140 178 222 240 T388 252" fill="none" stroke="currentColor" stroke-width="1.4" opacity="0.4"/>
+          <path d="M64 96 q14 -12 28 0 M100 82 q14 -12 28 0" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" opacity="0.6"/>
+          <rect x="322" y="218" width="34" height="34" fill="#8b3a3a" rx="2"/>
+          <text x="339" y="233" font-size="14" fill="#f6efe0" text-anchor="middle">新</text>
+          <text x="339" y="249" font-size="14" fill="#f6efe0" text-anchor="middle">笔</text>
+        </svg>
+        <span class="art-cap">墨韵新章 · 文心筑梦</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 作品展示 ===================== -->
+<section class="sec bp" id="works">
+  <div class="si">
+    <div class="st rv"><span class="tag">Our Works</span><h2>精选作品</h2>
+      <p class="desc">社员创作的散文、诗歌、小说与随笔（基础版本为本地示例数据）</p>
+    </div>
+    <div class="sw rv d1">
+      <input type="text" id="searchInput" placeholder="搜索作品、作者或关键词..." autocomplete="off" aria-label="搜索作品">
+      <svg class="s-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><use href="#i-search"/></svg>
+      <div class="sr" id="searchR"></div>
+    </div>
+    <div class="fs rv d2" id="filtersB">
+      <button type="button" class="on" data-f="all">全部</button>
+      <button type="button" data-f="prose">散文</button>
+      <button type="button" data-f="poetry">诗歌</button>
+      <button type="button" data-f="fiction">小说</button>
+      <button type="button" data-f="essay">随笔</button>
+    </div>
+    <div class="wg" id="worksGrid"></div>
+    <div id="loadMoreWrap"></div>
+  </div>
+</section>
+
+<!-- ===================== 近期活动 ===================== -->
+<section class="sec bw" id="events">
+  <div class="si">
+    <div class="st rv"><span class="tag">Events</span><h2>近期活动</h2></div>
+    <div class="el" id="eventsList"></div>
+    <p class="ev-note">活动日期按打开页面的时间自动排期，倒计时实时更新（基础版本演示逻辑）</p>
+  </div>
+</section>
+
+<!-- ===================== 社员风采 ===================== -->
+<section class="sec bp" id="members">
+  <div class="si">
+    <div class="st rv"><span class="tag">Members</span><h2>社员风采</h2></div>
+    <div class="mg" id="membersGrid"></div>
+  </div>
+</section>
+
+<!-- ===================== 投稿 ===================== -->
+<section class="sec bw" id="submission">
+  <div class="si">
+    <div class="st rv"><span class="tag">Submit</span><h2>投稿</h2>
+      <p class="desc">欢迎社员与校友投稿，优秀作品将收录至社刊《年轻的心》</p>
+    </div>
+    <div class="fc rs d1">
+      <h3>投稿申请</h3>
+      <form id="subForm" novalidate>
+        <div class="fr">
+          <div class="fg"><label for="sName">姓名</label><input type="text" id="sName" placeholder="请输入您的姓名" required></div>
+          <div class="fg"><label for="sEmail">邮箱</label><input type="email" id="sEmail" placeholder="请输入您的邮箱" required></div>
+        </div>
+        <div class="fr">
+          <div class="fg"><label for="sPhone">电话</label><input type="tel" id="sPhone" placeholder="请输入您的电话"></div>
+          <div class="fg"><label for="sGrade">年级</label>
+            <select id="sGrade" required>
+              <option value="">请选择年级</option>
+              <option value="高一">高一</option><option value="高二">高二</option><option value="高三">高三</option>
+              <option value="教师">教师</option><option value="社会人员">社会人员</option>
+            </select>
+          </div>
+        </div>
+        <div class="fr">
+          <div class="fg"><label for="sType">作品类型</label>
+            <select id="sType" required>
+              <option value="">请选择作品类型</option>
+              <option value="prose">散文</option><option value="poetry">诗歌</option>
+              <option value="fiction">小说</option><option value="essay">随笔</option>
+            </select>
+          </div>
+          <div class="fg"><label for="sTitle">作品标题</label><input type="text" id="sTitle" placeholder="请输入作品标题" required></div>
+        </div>
+        <div class="fg"><label for="sContent">作品内容</label><textarea id="sContent" placeholder="请输入您的作品内容..." required></textarea></div>
+        <button type="submit" class="btn btn-d" style="width:100%">提交投稿</button>
+      </form>
+      <div class="fok" id="subOk">投稿已提交成功！我们将尽快审核并与您联系。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 文学网站入口 ===================== -->
+<section class="sec bp" id="literature">
+  <div class="si">
+    <div class="st rv"><span class="tag">Portal</span><h2>文学网站入口</h2>
+      <p class="desc">这些文学园地，值得每一个爱文字的人收藏</p>
+    </div>
+    <div class="pg" id="portalGrid"></div>
+  </div>
+</section>
+
+<!-- ===================== 联系我们 ===================== -->
+<section class="sec bw" id="contact">
+  <div class="si">
+    <div class="st rv"><span class="tag">Contact</span><h2>联系我们</h2></div>
+    <div class="cg">
+      <div class="ci rl d1">
+        <h3>加入新笔文学社</h3>
+        <p>欢迎热爱文学创作的同学加入我们！无论你是写作新手还是经验丰富的作者，都能在这里找到志同道合的伙伴。</p>
+        <div class="cit"><div class="cii"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-map"/></svg></div><div><h4>地址</h4><p id="cAddress"></p></div></div>
+        <div class="cit"><div class="cii"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-mail"/></svg></div><div><h4>邮箱</h4><p id="cEmail"></p></div></div>
+        <div class="cit"><div class="cii"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-phone"/></svg></div><div><h4>电话</h4><p id="cPhone"></p></div></div>
+        <div class="cit"><div class="cii"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-clock"/></svg></div><div><h4>开放时间</h4><p id="cHours"></p></div></div>
+        <div class="cit"><div class="cii"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-message"/></svg></div><div><h4>微信公众号</h4><p><a class="qr-link" href="#" data-type="wechat">扫码关注</a></p></div></div>
+        <div class="cit"><div class="cii"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-users"/></svg></div><div><h4>QQ群</h4><p><a class="qr-link" href="#" data-type="qq">加入交流群</a></p></div></div>
+      </div>
+      <div class="fc rr d2" style="margin:0">
+        <h3>加入申请</h3>
+        <form id="memForm" novalidate>
+          <div class="fr">
+            <div class="fg"><label for="mName">姓名</label><input type="text" id="mName" placeholder="请输入您的姓名" required></div>
+            <div class="fg"><label for="mEmail">邮箱</label><input type="email" id="mEmail" placeholder="请输入您的邮箱" required></div>
+          </div>
+          <div class="fr">
+            <div class="fg"><label for="mPhone">电话</label><input type="tel" id="mPhone" placeholder="请输入您的电话"></div>
+            <div class="fg"><label for="mGrade">年级</label>
+              <select id="mGrade" required>
+                <option value="">请选择年级</option>
+                <option value="高一">高一</option><option value="高二">高二</option><option value="高三">高三</option>
+                <option value="教师">教师</option><option value="社会人员">社会人员</option>
+              </select>
+            </div>
+          </div>
+          <div class="fg"><label for="mInterest">兴趣方向</label><input type="text" id="mInterest" placeholder="诗歌、散文、小说等"></div>
+          <div class="fg"><label for="mMsg">个人简介及申请原因</label><textarea id="mMsg" placeholder="请简单介绍自己并说明为什么想加入我们..." required></textarea></div>
+          <button type="submit" class="btn btn-d" style="width:100%">提交申请</button>
+        </form>
+        <div class="fok" id="memOk">申请已提交成功！我们将尽快与您联系。</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 页脚 ===================== -->
+<footer>
+  <div class="si">
+    <h3>新笔文学社</h3>
+    <p class="tl">以文会友 · 以笔写心 · 以书传情</p>
+    <div class="fsoc">
+      <a href="#" class="qr-link" data-type="wechat" aria-label="微信公众号"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-message"/></svg></a>
+      <a href="#" class="qr-link" data-type="qq" aria-label="QQ群"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-users"/></svg></a>
+      <a href="#" aria-label="微博"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-globe"/></svg></a>
+    </div>
+    <p class="copy" id="copyLine"></p>
+  </div>
+</footer>
+
+<!-- 浮动按钮 -->
+<button class="btop" id="backTop" aria-label="回到顶部"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-arrow-up"/></svg></button>
+<button class="dkbtn" id="darkToggle" aria-label="切换深浅色"></button>
+
+<!-- ===================== 作品弹窗 ===================== -->
+<div class="modal" id="articleModal" role="dialog" aria-modal="true">
+  <div class="modal-box">
+    <button class="mclose" id="modalClose" aria-label="关闭">&times;</button>
+    <h2 id="mTitle"></h2>
+    <div class="mmeta" id="mMeta"></div>
+    <div class="mart" id="mart"></div>
+    <div class="mbody" id="mBody"></div>
+    <div class="macts">
+      <button type="button" id="mLikeBtn"></button>
+      <button type="button" id="mBookmarkBtn"></button>
+      <button type="button" id="mCommentBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-comment"/></svg> 评论</button>
+    </div>
+    <div id="comments-section"></div>
+  </div>
+</div>
+
+<!-- ===================== 二维码弹窗 ===================== -->
+<div class="modal" id="qrModal" role="dialog" aria-modal="true">
+  <div class="modal-box" style="max-width:340px;text-align:center">
+    <button class="mclose" id="qrClose" aria-label="关闭">&times;</button>
+    <div id="qrContent"></div>
+  </div>
+</div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/app.js"></script>
+</body>
+</html>
