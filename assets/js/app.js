@@ -128,6 +128,9 @@
     if (DATA.source === "remote") {
       b.textContent = "数据来源：社团作品库（实时）";
       b.className = "src-badge src-on";
+    } else if (DATA.source === "local-managed") {
+      b.textContent = "数据来源：本地管理（后台编辑）";
+      b.className = "src-badge src-managed";
     } else {
       b.textContent = "数据来源：本地示例数据";
       b.className = "src-badge";
@@ -914,10 +917,38 @@
   }
 
   /* ============================================================
+   * 本地管理覆盖层（由 admin.html 维护，全站生效）
+   * useLocal = true 时进入“本地管理模式”：作品/活动/社员/社刊
+   * 以本地编辑为准，不再拉取远端。
+   * ============================================================ */
+  function applyOverlay() {
+    var ov = LS.get("overlay", null);
+    if (!ov) return;
+    if (ov.useLocal) {
+      var del = ov.deletedWorks || [];
+      var list = D.works.filter(function (w) { return del.indexOf(w.id) < 0; }).map(function (w) {
+        return (ov.works && ov.works[w.id]) || w;
+      });
+      if (ov.works) {
+        Object.keys(ov.works).forEach(function (k) {
+          if (ov.works[k]._new) list.push(ov.works[k]);
+        });
+      }
+      DATA.works = list;
+      DATA.source = "local-managed";
+      DATA.remoteTried = true;
+    }
+    if (ov.events) D.events = ov.events;
+    if (ov.members) D.members = ov.members;
+    if (ov.journal) D.journal.issues = ov.journal;
+  }
+
+  /* ============================================================
    * 启动
    * ============================================================ */
   function init() {
     DATA.works = D.works.slice();
+    applyOverlay();
     var page = document.body.getAttribute("data-page");
 
     renderUserUI();
@@ -929,7 +960,6 @@
 
     if (page === "index") {
       renderTexts();
-      renderWorks(true);
       renderEvents();
       renderMembers();
       renderPortals();
@@ -937,13 +967,18 @@
       bindWorksEvents();
       bindForm("#subForm", "#subOk", "submissions", "投稿已提交，我们将尽快审核（本地演示）", "提交投稿");
       bindForm("#memForm", "#memOk", "applications", "申请已提交，我们将尽快与您联系（本地演示）", "提交申请");
-      var badge = $("#srcBadge");
-      if (badge) { badge.textContent = "正在连接社团作品库…"; badge.className = "src-badge src-loading"; }
-      showSkeleton();
-      loadRemoteWorks().then(function (remote) {
+      if (DATA.source === "local-managed") {
+        setSourceBadge();
         renderWorks(true);
-        if (remote) toast("已加载社团作品库真实数据");
-      });
+      } else {
+        var badge = $("#srcBadge");
+        if (badge) { badge.textContent = "正在连接社团作品库…"; badge.className = "src-badge src-loading"; }
+        showSkeleton();
+        loadRemoteWorks().then(function (remote) {
+          renderWorks(true);
+          if (remote) toast("已加载社团作品库真实数据");
+        });
+      }
     }
     if (page === "work") renderWorkPage();
     if (page === "journal") renderJournal();
