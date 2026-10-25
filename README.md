@@ -1,102 +1,99 @@
-# 新笔文学社 · 基础版本 v0.4
+# 新笔文学社 · 基础版本 v0.5
 
-岳阳县第二中学「新笔文学社」官网的基础版本。**自包含、零外部依赖**：不接 CDN，作品数据优先拉取社团 Supabase（只读，失败自动回退本地示例数据），双击 `index.html` 即可打开。
+岳阳县第二中学「新笔文学社」官网。**已接入 WorkBuddy 托管云后端**：作品、活动、社员、社刊、投稿、评论全部存云端数据库，社员用邮箱注册登录后可在后台直接编辑，改动全站即时生效。
 
-**线上地址**：https://lueuru.github.io/xinbi-basic/ （GitHub Pages，仓库 `lueuru/xinbi-basic`，独立于原站仓库）
+## 两个线上地址
 
-## 快速开始
+| 地址 | 说明 |
+|---|---|
+| **https://xinbi-literature.app.workbuddy.host/** | **主站**（WorkBuddy Sites + 云后端）。需要分享码访问；登录、编辑、投稿、评论在此完整可用 |
+| https://lueuru.github.io/xinbi-basic/ | 静态镜像（GitHub Pages）。无云后端，自动回退本地示例数据，适合看版式 |
 
-- 直接双击 `index.html` 在浏览器打开；或
-- 在本目录起一个本地服务（体验更完整，Service Worker 需要 http 环境）：
+> 云后端会校验请求来源（Origin 精确匹配），因此只有主站域名能连云端；GitHub Pages 镜像会显示「本地示例数据」。
 
-```bash
-cd xinbi-basic
-python3 -m http.server 8080
-# 浏览器访问 http://localhost:8080
-```
+## 数据在哪
+
+云端数据库（PostgreSQL + PostgREST 风格 API）共 4 张表：
+
+| 表 | 内容 |
+|---|---|
+| `works` | 作品：标题/作者/年级班级/分类/摘要/正文(JSONB)/点赞数/收藏数/`slug`（正文水合用的稳定键） |
+| `site_content` | 站点内容：`kind` = `event` / `member` / `issue`，`body` 存 JSONB 详情 |
+| `submissions` | 投稿与加入申请（`category='application'` 区分） |
+| `interactions` | 点赞 / 收藏 / 评论（`kind` 区分，`owner_id` 记录作者） |
+
+- 已预置：**12 篇作品、3 项活动、3 位社员、6 期社刊**。
+- 作品的正文文本同时随站点内置（`data.js`）：云端行只有元数据时，前端按 `slug` 从内置语料水合正文，保证离线也能读全文；一旦管理员在后台改过正文，以云端为准。
 
 ## 文件结构
 
 ```
 xinbi-basic/
-├── index.html            # 单页站点：幕头/关于/作品/活动/社员/投稿/门户/联系
-├── work.html             # 作品详情页（独立路由 work.html?id=）
-├── journal.html          # 社刊《年轻的心》往期回顾
-├── admin.html            # 内容管理后台（本地演示，登录后访问）
-├── login.html            # 本地演示登录页（不连接真实后台）
-├── 404.html              # 404 页
-├── manifest.json         # PWA 清单（可添加到主屏幕）
-├── sw.js                 # Service Worker（导航网络优先 / 静态资源缓存优先）
+├── index.html            # 首页：幕头/关于/作品/活动/社员/投稿/门户/联系
+├── work.html             # 作品详情页（work.html?id=<云端ID>）
+├── journal.html          # 社刊《年轻的心》往期
+├── admin.html            # 内容管理后台（云端读写 / 未登录只读）
+├── login.html            # 社员登录注册（邮箱密码 + 邮箱验证码）
+├── 404.html
+├── manifest.json / sw.js # PWA（导航网络优先，静态资源缓存优先，缓存版本 v4）
 ├── robots.txt / sitemap.xml
 ├── assets/
-│   ├── css/style.css     # 全站样式（宣纸 + 朱砂 + 鎏金，含深色模式）
-│   ├── icons/icon.svg    # 应用图标
+│   ├── css/style.css
+│   ├── icons/icon.svg
 │   └── js/
-│       ├── data.js       # 站点静态数据：社团信息/示例作品/活动/社员/门户/社刊
-│       ├── config.js     # 远端数据配置（Supabase 地址与 anon key、开关）
-│       ├── app.js        # 前台交互 + 数据层（远端优先，失败回退本地）
-│       └── admin.js      # 后台交互（覆盖层 CRUD、导入导出、模式切换）
+│       ├── data.js       # 站点语料：社团信息 / 示例作品全文 / 活动 / 社员 / 门户 / 社刊
+│       ├── config.js     # 云服务 publicConfig（endpoint + publishableKey）与旧站配置
+│       ├── cloud.js      # 云数据层：SDK 装载、数据库读写、认证封装
+│       ├── app.js        # 前台：数据优先级 云端 → 本地语料
+│       └── admin.js      # 后台：云端读写 / 本地草稿回退
 └── README.md
 ```
 
-## 已实现的功能
+## 功能
 
-- **作品数据层**：打开首页时自动拉取社团 Supabase `works` 表（只读，7 秒超时）；成功则展示真实作品并显示「数据来源：社团作品库（实时）」，失败或为空时回退本地示例数据；拉取期间有骨架屏动画。
-- **作品展示**：分类筛选、关键词搜索下拉（高亮匹配）、SVG 自动生成书封、加载更多、弹窗预览（点赞/收藏/评论）、跳转独立详情页。
-- **作品详情页**（work.html）：舒适排版长文、点赞/收藏/评论、上一篇/下一篇、相关作品、分享按钮、打印样式。
-- **社刊《年轻的心》**（journal.html）：刊物介绍 + 往期期号/主题/精选篇目。
-- **内容管理后台**（admin.html）：
-  - 作品：新增 / 编辑 / 删除，侧滑式编辑器（标题、作者、年级班级、分类、摘要、正文分段）
-  - 活动 / 社员 / 社刊：分区编辑、保存、增删
-  - 数据：导出 JSON、导入 JSON、恢复默认、查看本地投稿与申请记录、清空互动数据
-  - 两种模式：远端优先（默认）/ 本地管理（编辑优先生效，可一键切换）
-  - 编辑结果写入本机 localStorage 覆盖层，**全站页面即时生效**，作品区徽标显示「本地管理（后台编辑）」
-- **近期活动**：日期按打开时间自动排期，倒计时实时刷新。
-- **全局**：深色模式（首次访问跟随系统设置）、阅读进度条、回到顶部、滚动揭示动画、移动端汉堡菜单、响应式（最窄 360px）、PWA 离线、SEO（OG/JSON-LD/canonical/sitemap）。
+- **数据层**：打开页面即连云端拉取作品/活动/社员/社刊；云端不可达时自动回退本地语料，作品区标记「数据来源」。
+- **社员系统**：邮箱 + 密码登录；邮箱验证码登录；注册（验证码 + 设置密码）；忘记密码。会话自动续期，登录态跨页保持。
+- **内容管理后台**：作品增删改（侧滑编辑器）、活动/社员/社刊分区编辑、JSON 导入导出、查看云端投稿记录。**已登录 = 写云端（全站共享）**；未登录 = 只读视图 + 本地草稿模式。
+- **投稿与互动**：投稿/申请表单直接写入云端 `submissions`；点赞、收藏、评论登录后写入 `interactions` 并全站可见。
+- **前台体验**：分类筛选、搜索下拉、SVG 自动书封、加载更多、作品弹窗、详情页（分享/打印样式）、倒计时活动、深色模式（跟随系统）、PWA 离线、响应式。
 
-## 内容管理后台怎么用
+## 账号与权限
 
-1. 打开 `admin.html` → 未登录会提示，登录后进入（演示登录任意邮箱即可）。
-2. 「作品」页签 →「＋ 新增作品」→ 填表保存 → 回首页即可看到新作品（作品区徽标变为「本地管理」）。
-3. 「数据」页签 →「导出 JSON」可把当前全部内容存成文件交接；「恢复默认」清空所有本地编辑。
-4. 想要回到「拉取社团作品库真实数据」，点右上角「切换回远端优先」。
+- 任何访客可**浏览**全部内容（作品表对匿名开放读）。
+- 任何**登录社员**可编辑作品与站点内容（协作式维护），自己的投稿/评论只能改自己的（RLS `owner_id`）。
+- 如需「仅管理员可编辑」，在数据库加一张 `editors(owner_id)` 白名单表，把作品表的写策略改为
+  `EXISTS (SELECT 1 FROM editors e WHERE e.owner_id = auth.uid())` 即可（本次未做，保持社团协作习惯）。
 
-> 后台数据保存在**访问者本机浏览器**，不会写回服务器。要让所有人看到，需接真实后台（见下方 TODO）。
+## 关于原站的 Supabase
 
-## 部署
+原站（`Xinbi/`）依赖的 Supabase 项目 `aybnmewinjckmftvctvx.supabase.co` **已从公网消失**：GitHub Actions 保活记录停在 2026-09-16，从 GitHub 公网 runner 实测 `getent hosts` 无解析、HTTP 000。因此 v0.5 改为完全独立的托管云后端，原站仓库与备份未改动。
 
-已部署在 GitHub Pages：仓库 `lueuru/xinbi-basic` → 分支 `main` 根目录。
+## 部署与维护
 
 ```bash
+# 主站（WorkBuddy Sites，带云后端）
+# 通过 “发布为应用” 重新发布即可，域名与云后端 Origin 保持不变
+
+# GitHub 静态镜像
 cd xinbi-basic
 git add -A && git commit -m "update"
 git push https://<token>@github.com/lueuru/xinbi-basic.git main
 ```
 
-部署到新域名时，记得替换 `index.html` 的 canonical、`sitemap.xml` 与 `robots.txt` 中的域名。
-
-## 与原站的关系
-
-- 原站源码备份在同级目录 `Xinbi/`（动态版，Supabase 后台 + admin.html + login.html）与 `xinbi-literature.github.io/`（静态部署版）。**本基础版本是另建的独立仓库，不影响原站**。
-- `assets/js/config.js` 中的 Supabase 地址与 anon key 来自原站源码，是社团自己的项目；将 `enableRemote` 改为 `false` 即可完全离线使用本地示例数据。
+数据库管理走 WorkBuddy 云服务面板 / MCP 工具（`workbuddy_cloudservice_db_*`），不要在页面里跑 DDL。
 
 ## 后续可做（TODO）
 
-1. **接入真实后台**：把 admin.html 的保存动作从 localStorage 改为写 Supabase（works / events / profiles 等表，参照 `Xinbi/index.html` 的 REST 写法），需先接 Supabase Auth 拿到用户 token。
-2. **投稿入库**：`submissions` / `member_applications` 表写入（当前是本地演示）。
-3. **真实评论与点赞**：目前存 localStorage，接 Auth 后可落库并跨设备同步。
-4. **社刊 PDF**：journal.html 的下载按钮为演示占位，可接存储桶真实文件。
-5. **图片资源**：当前书封用 SVG 按分类色生成；若社员有配图，可启用 Supabase Storage 并在 coverArt 中回退到真实图片。
-
-## 设计说明
-
-- 配色取自原站：宣纸底 `#faf7f0`、朱砂红 `#8b3a3a`、鎏金 `#b8964a`、黛绿 `#5b7a6a`。
-- 字体栈：`Noto Serif SC / Songti SC / STSong / SimSun`，无需联网加载。
-- 图标为内联 SVG（feather 风格），书封由 SVG 按分类色自动生成，无外链图片依赖。
+1. **图片资源**：作品配图可接云存储（当前书封为 SVG 自动生成）。
+2. **社刊 PDF**：journal.html 的下载按钮仍是占位，可上传到云存储并换取签名链接。
+3. **编辑白名单**：见上文「账号与权限」。
+4. **投稿审核流**：`submissions.status` 已有 `pending`，可在后台加「通过→复制进 works」一键操作。
+5. **导出备份**：后台「数据」页可导出 JSON；建议每月导出一次存本地。
 
 ## 版本记录
 
-- **v0.4（2026-10-25）**：上线 GitHub Pages（`lueuru/xinbi-basic`）；新增内容管理后台 admin.html（作品/活动/社员/社刊 CRUD + 导入导出 + 远端/本地双模式），编辑通过 localStorage 覆盖层全站生效；修复后台 `$$` 作用域丢失导致分区编辑串行、新增作品缺 `_new` 标记不显示两个 bug；SW 缓存版本升至 v3。
-- **v0.3（2026-10-25）**：真实浏览器全链路测试（无头 Chrome + CDP）并修复 3 个只有跑起来才会暴露的 bug：① 首页 `data-page` 值不匹配导致整页无渲染；② “加载更多”不翻页；③ 作品页/弹窗动作区 SVG 图标无尺寸规则（按 300px 默认值撑爆布局）。新增：系统深色偏好、分享按钮、作品页 CreativeWork 结构化数据、登录后回跳原页面、可访问性项、对比度提升、Supabase 预连接、打印样式。Service Worker 导航请求改网络优先。
-- **v0.2（2026-10-25）**：Supabase 真实作品数据层（只读+回退）、作品详情页、社刊往期页、404 页、骨架屏、PWA、SEO 结构化数据。
-- **v0.1（2026-10-24）**：首个基础版本：单页 + 本地示例数据 + 演示登录。
+- **v0.5（2026-10-25）**：接入 WorkBuddy 托管云后端（4 张表 + 12 篇/3 活动/3 社员/6 期预置数据）；真实邮箱认证（密码 + 验证码 + 注册 + 找回）；后台改为云端读写、未登录只读；投稿/评论/点赞落库；修复 SDK 配置快照导致云端永不启用的问题（`cloud.js` 惰性读配置 + 脚本顺序）；SW 缓存升至 v4；发布到 WorkBuddy Sites。
+- **v0.4（2026-10-25）**：上线 GitHub Pages；新增内容管理后台（本地覆盖层 CRUD + 导入导出）。
+- **v0.3（2026-10-25）**：真实浏览器全链路测试，修复首页不渲染 / 加载更多失效 / 图标撑爆布局；可访问性、分享、系统深色、打印样式。
+- **v0.2（2026-10-25）**：Supabase 只读数据层、作品详情页、社刊页、404、骨架屏、PWA、SEO。
+- **v0.1（2026-10-24）**：单页基础版 + 本地示例数据。
