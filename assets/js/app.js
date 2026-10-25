@@ -951,6 +951,7 @@
         '<a class="btn btn-l sm jdl" href="issue.html?no=' + is.no + '">在线阅读本期 →</a>' +
         "</div></div>";
     }).join("");
+    renderIssueWall();
     $$(".jdl").forEach(function (b) {
       b.addEventListener("click", function (e) {
         if (b.tagName !== "A") { e.preventDefault(); toast("演示版本：社刊 PDF 尚未接入", "err"); }
@@ -1430,8 +1431,9 @@
         return "<div class='toc-row'><div>" + title + "<span class='toc-type'>" + esc(p.type) + "</span></div><div class='a'>" + esc(p.author) + "</div><div class='p'>" + esc(p.page) + "</div></div>";
       }).join("") || "<p class='ad-empty'>本期目录整理中</p>";
 
+      renderIssueSpread(is);
       var pw = $("#issuePrefaceWrap");
-      if (idx === 0 && D.site.preface) {
+      if (!pw) { /* 已改为导读跨页 */ } else if (idx === 0 && D.site.preface) {
         pw.style.display = "block";
         $("#issuePreface").innerHTML = D.site.preface.paragraphs.map(function (t) {
           return "<p style='text-indent:2em;line-height:2;color:var(--ink-2);margin-bottom:.8em'>" + esc(t) + "</p>";
@@ -1589,6 +1591,93 @@
     paint();
   }
 
+
+  /* ============================================================
+   * v1.0 专题 / 文学地理 / 刊墙 / 内页试读
+   * ============================================================ */
+  function renderTopics() {
+    var box = $("#topicBox");
+    if (!box) return;
+    box.innerHTML = (D.site.topics || []).map(function (t) {
+      var works = (t.works || []).map(function (title) {
+        return DATA.works.filter(function (w) { return w.title === title; })[0];
+      }).filter(Boolean);
+      return '<div class="topic"><span class="topic-tag">' + esc(t.tag) + "</span>" +
+        "<h3>" + esc(t.title) + "</h3>" +
+        '<p class="topic-note">' + esc(t.note) + "</p>" +
+        '<div class="topic-works">' + works.map(function (w) {
+          return '<a class="topic-work" href="work.html?id=' + w.id + '"><b>' + esc(w.title) + "</b>" +
+            "<span>" + esc(w.author) + " · " + esc(D.categories[w.category] || "") + " · " + (w.likes || 0) + " 喜欢</span></a>";
+        }).join("") + "</div></div>";
+    }).join("");
+  }
+
+  function renderGeo() {
+    var box = $("#geoGrid");
+    if (!box) return;
+    box.innerHTML = (D.site.geo || []).map(function (g) {
+      return '<div class="geo-card"><div class="geo-name">' + esc(g.name) + "</div>" +
+        '<div class="geo-sub">' + esc(g.sub) + "</div>" +
+        '<p class="geo-desc">' + esc(g.desc) + "</p>" +
+        '<p class="geo-prompt"><b>写作提示</b>' + esc(g.prompt) + "</p></div>";
+    }).join("");
+  }
+
+  var ISSUE_HUES = ["#8b3a3a", "#b8964a", "#5b7a6a", "#9c6b3f", "#33506b", "#6e2f2a"];
+
+  function vText(str, x, y0, size, color) {
+    return String(str || "").split("").map(function (ch, i) {
+      return '<text x="' + x + '" y="' + (y0 + i * size * 1.14) + '" font-size="' + size + '" fill="' + color +
+        '" text-anchor="middle" font-family="Songti SC, SimSun, STSong, serif">' + esc(ch) + "</text>";
+    }).join("");
+  }
+
+  function issueCover(is, i) {
+    var c = ISSUE_HUES[i % ISSUE_HUES.length];
+    var theme = String(is.theme || "");
+    return '<svg viewBox="0 0 300 400" role="img" aria-label="第' + esc(is.no) + "期 " + esc(theme) + '">' +
+      '<rect width="300" height="400" fill="#f6efe0"/>' +
+      '<rect width="300" height="16" fill="' + c + '"/>' +
+      '<rect x="18" y="34" width="264" height="332" fill="none" stroke="' + c + '" stroke-opacity=".3"/>' +
+      '<text x="40" y="74" font-size="11" fill="' + c + '" letter-spacing="3" font-family="Helvetica, Arial, sans-serif">XINBI</text>' +
+      '<text x="40" y="96" font-size="12" fill="' + c + '" font-family="Songti SC, SimSun, serif" letter-spacing="2">校刊 · 新笔</text>' +
+      vText(theme, 214, 140, 34, "#2a211b") +
+      '<line x1="40" y1="330" x2="120" y2="330" stroke="' + c + '" stroke-opacity=".5"/>' +
+      '<text x="40" y="352" font-size="13" fill="' + c + '" font-family="Songti SC, SimSun, serif" letter-spacing="1">第 ' + esc(is.no) + " 期 · " + esc(is.term || "") + "</text>" +
+      '<text x="40" y="370" font-size="10" fill="#8a7c6c" letter-spacing="1.6" font-family="Helvetica, Arial, sans-serif">' + esc(String(is.date || "").replace("年", ".").replace("月", "")) + "</text>" +
+      "</svg>";
+  }
+
+  function renderIssueWall() {
+    var wall = $("#issueWall");
+    if (!wall) return;
+    wall.innerHTML = (D.journal.issues || []).map(function (is, i) {
+      return '<a class="wall-item" href="issue.html?no=' + is.no + '">' +
+        '<div class="wall-cover">' + issueCover(is, i) + "</div>" +
+        '<div class="wall-meta"><b>第' + is.no + "期 · " + esc(is.theme) + "</b><span>" + esc(is.date) + "</span></div></a>";
+    }).join("");
+  }
+
+  function renderIssueSpread(is) {
+    var spread = $("#issueSpread");
+    if (!spread || !is) return;
+    var first = (is.pieces || [])[0];
+    var w = first ? DATA.works.filter(function (x) { return x.title === first.title; })[0] : null;
+    var lead = w ? (w.content || []).slice(0, 2) : [];
+    var pre = D.site.preface;
+    spread.innerHTML =
+      '<div class="spread">' +
+        '<div class="page"><h4>卷首语 · PREFACE</h4>' +
+          (pre ? pre.paragraphs.slice(0, 2).map(function (t) { return '<p class="page-lead">' + esc(t) + "</p>"; }).join("") +
+            '<div class="page-sign">—— ' + esc(pre.author) + "</div>" : "") +
+          '<span class="page-no">导读 · 01</span></div>' +
+        '<div class="page"><h4>试读 · ' + esc(first ? first.title : "本期精选") + "</h4>" +
+          (lead.length ? lead.map(function (t) { return '<p class="page-lead">' + esc(t) + "</p>"; }).join("") : '<p class="page-lead">本期内页整理中。</p>') +
+          '<div class="page-sign">' + esc(w ? w.author : "") + (w ? " · " + esc(D.categories[w.category] || "") : "") + "</div>" +
+          '<span class="page-no">导读 · 02</span></div>' +
+      "</div>";
+  }
+
   /* ============================================================
    * 启动
    * ============================================================ */
@@ -1622,6 +1711,8 @@
       renderIndexSections();
       renderFeatured();
       renderBars();
+      renderTopics();
+      renderGeo();
       renderEvents();
       renderMembers();
       renderPortals();
@@ -1643,6 +1734,7 @@
             renderMembers();
             renderFeatured();
             renderBars();
+            renderTopics();
             setSourceBadge();
             toast("已连接社团云端作品库");
             return;
