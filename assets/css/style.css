@@ -9,7 +9,7 @@
   --card: #ffffff;
   --ink: #2c2416;
   --ink-2: #5c5040;
-  --ink-3: #8b7e6c;
+  --ink-3: #7c7060;
   --gold: #b8964a;
   --gold-soft: rgba(184, 150, 74, 0.12);
   --red: #8b3a3a;
@@ -66,6 +66,29 @@ svg.ic-f { fill: currentColor; stroke: none; }
 .mact { background: none; border: none; padding: 0; font-family: inherit; font-size: inherit; color: inherit; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: color 0.3s; }
 .mact:hover { color: var(--red); }
 ::selection { background: rgba(139, 58, 58, 0.22); }
+
+/* 跳转到主要内容（键盘可访问性） */
+.skip-link {
+  position: absolute;
+  top: -48px;
+  left: 16px;
+  z-index: 3000;
+  background: var(--ink);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 0 0 8px 8px;
+  font-size: 0.88rem;
+  transition: top 0.25s var(--ease);
+}
+.skip-link:focus { top: 0; }
+
+/* 键盘焦点可见 */
+:focus-visible {
+  outline: 2px solid var(--red);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+body.dark :focus-visible { outline-color: var(--gold); }
 
 /* 纸纹 */
 body::before {
@@ -1107,6 +1130,7 @@ body.dark .qr-title { color: var(--gold); }
 .wk-body { font-size: 1.02rem; line-height: 2.05; color: var(--ink-2); }
 .wk-body p { margin: 0 0 1.15em; text-indent: 2em; }
 .wk-acts { display: flex; gap: 28px; margin: 28px 0 8px; padding: 16px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.wk-acts svg, .macts svg { width: 16px; height: 16px; flex: none; }
 .wk-nav { display: flex; justify-content: space-between; gap: 12px; margin: 34px 0 10px; }
 .wk-nav .btn { max-width: 48%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .wk-related { margin-top: 46px; }
@@ -1172,4 +1196,21 @@ body.dark .nf-code { color: var(--gold); }
   .wk-acts { gap: 20px; }
   .wk-nav { flex-direction: column; }
   .wk-nav .btn { max-width: 100%; }
+}
+
+/* 分享按钮 */
+.share-btn { display: inline-flex; align-items: center; gap: 6px; background: none; border: none; padding: 0; margin: 0; font-family: inherit; font-size: 0.9rem; color: var(--ink-2); cursor: pointer; transition: color 0.3s; }
+.share-btn:hover { color: var(--gold); }
+.share-btn svg { width: 15px; height: 15px; }
+
+/* 打印样式：作品页只印正文 */
+@media print {
+  body::before, .header, .mnav, .pbar, .site-foot, footer, .btop, .dkbtn,
+  .wk-crumb, .wk-art, .wk-acts, .wk-nav, .wk-related, #comments-section,
+  .toast, .modal, .udrop, .user-drop { display: none !important; }
+  body { background: #fff; color: #000; padding-top: 0; }
+  .wk { max-width: 100%; padding: 0; }
+  .wk-body { font-size: 12pt; line-height: 1.9; color: #000; }
+  .wk-body p { text-indent: 2em; }
+  .wk-title { font-size: 18pt; }
 }

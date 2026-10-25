@@ -96,7 +96,12 @@
     var content = [];
     if (Array.isArray(w.content)) content = w.content;
     else if (typeof w.content === "string") {
-      content = w.content.split(/\r?\n\s*\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+      var raw = w.content.trim();
+      content = raw.split(/\r?\n\s*\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+      /* 只有一段且很长时，按单换行再切（兼容只用 \n 分段的正文） */
+      if (content.length < 2 && raw.length > 400) {
+        content = raw.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+      }
     }
     var cat = ["prose", "poetry", "fiction", "essay"].indexOf(w.category) > -1 ? w.category : "essay";
     return {
@@ -209,6 +214,7 @@
   function renderWorks(reset) {
     var list = matchWorks();
     if (reset) wState.shown = PAGE_SIZE;
+    else wState.shown = Math.min(wState.shown + PAGE_SIZE, list.length);
     var grid = $("#worksGrid");
     if (!grid) return;
     if (!list.length) {
@@ -320,7 +326,7 @@
     if (u) {
       html += '<div class="cmt-input-row"><input id="cmtInput" placeholder="写下你的评论..." maxlength="200"><button type="button" class="btn btn-d" id="cmtPostBtn">发表</button></div>';
     } else {
-      html += '<p class="cmt-login-hint">演示登录后即可评论 → <a href="login.html">去登录</a></p>';
+      html += '<p class="cmt-login-hint">演示登录后即可评论 → <a href="' + loginUrl() + '">去登录</a></p>';
     }
     section.innerHTML = html;
     on("#cmtPostBtn", "click", postComment);
@@ -574,8 +580,8 @@
       b.innerHTML = icon("user");
       b.title = "登录 / 注册";
       d.innerHTML =
-        '<a href="login.html">' + icon("user") + " 登录</a>" +
-        '<a href="login.html">' + icon("feather") + " 注册</a>";
+        '<a href="' + loginUrl() + '">' + icon("user") + " 登录</a>" +
+        '<a href="' + loginUrl() + '">' + icon("feather") + " 注册</a>";
     }
     $$("a[data-act]", d).forEach(function (a) {
       a.addEventListener("click", function (e) {
@@ -585,6 +591,46 @@
         if (act === "logout") { LS.del("user"); renderUserUI(); toast("已退出登录"); }
       });
     });
+  }
+
+  /* ============================================================
+   * 分享与登录回跳
+   * ============================================================ */
+  function shareWork(w) {
+    var url = location.origin + location.pathname + "?id=" + w.id;
+    if (navigator.share) {
+      navigator.share({ title: w.title + " · 新笔文学社", text: w.excerpt || "", url: url }).catch(function () {});
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(function () { toast("链接已复制，去粘贴给同学吧"); }, function () { toast("复制失败，请手动复制地址栏链接", "err"); });
+    } else {
+      toast("请手动复制地址栏链接", "err");
+    }
+  }
+
+  function loginUrl() {
+    return "login.html?next=" + encodeURIComponent(location.pathname + location.search);
+  }
+
+  /* 作品页结构化数据（CreativeWork） */
+  function injectWorkLD(w) {
+    var old = document.getElementById("ld-work");
+    if (old) old.remove();
+    var s = document.createElement("script");
+    s.type = "application/ld+json";
+    s.id = "ld-work";
+    var ld = {
+      "@context": "https://schema.org",
+      "@type": "CreativeWork",
+      "name": w.title,
+      "author": { "@type": "Person", "name": w.author || "佚名" },
+      "genre": D.categories[w.category] || "",
+      "publisher": { "@type": "Organization", "name": "新笔文学社" },
+      "inLanguage": "zh-CN",
+      "abstract": w.excerpt || ""
+    };
+    if (w.created_at) ld.datePublished = w.created_at;
+    s.textContent = JSON.stringify(ld);
+    document.head.appendChild(s);
   }
 
   /* ============================================================
@@ -617,7 +663,10 @@
       $("#wkBody").innerHTML = w.content.map(function (p) { return p ? "<p>" + esc(p) + "</p>" : ""; }).join("");
       $("#wkActions").innerHTML =
         '<button type="button" class="like-btn' + (liked ? " liked" : "") + '" data-id="' + w.id + '">' + icon("heart", liked) + ' <span class="n">' + (w.likes + (liked ? 1 : 0)) + "</span> 喜欢</button>" +
-        '<button type="button" class="bookmark-btn' + (bmed ? " liked" : "") + '" data-id="' + w.id + '">' + icon("bookmark", bmed) + ' <span class="n">' + (w.bookmarks + (bmed ? 1 : 0)) + "</span> 收藏</button>";
+        '<button type="button" class="bookmark-btn' + (bmed ? " liked" : "") + '" data-id="' + w.id + '">' + icon("bookmark", bmed) + ' <span class="n">' + (w.bookmarks + (bmed ? 1 : 0)) + "</span> 收藏</button>" +
+        '<button type="button" class="share-btn" id="wkShareBtn">' + icon("share") + " 分享</button>";
+      on("#wkShareBtn", "click", function () { shareWork(w); });
+      injectWorkLD(w);
       renderComments(w.id);
 
       var navHtml = "";
@@ -700,7 +749,10 @@
         if (s.getBoundingClientRect().top <= 150) cur = s.id;
       });
       links.forEach(function (a) {
-        a.classList.toggle("active", a.getAttribute("href") === "#" + cur);
+        var on2 = a.getAttribute("href") === "#" + cur;
+        a.classList.toggle("active", on2);
+        if (on2) a.setAttribute("aria-current", "page");
+        else a.removeAttribute("aria-current");
       });
     }
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -735,7 +787,10 @@
 
     on("#backTop", "click", function () { window.scrollTo({ top: 0, behavior: "smooth" }); });
 
-    var darkOn = LS.get("dark", "0") === "1";
+    var darkSaved = LS.get("dark", null);
+    var darkOn = darkSaved === null
+      ? !!(window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches)
+      : darkSaved === "1";
     var dk = $("#darkToggle");
     function applyDark() {
       document.body.classList.toggle("dark", darkOn);

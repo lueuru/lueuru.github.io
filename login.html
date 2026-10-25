@@ -55,6 +55,9 @@
 (function () {
   "use strict";
   var mode = "login";
+  /* 登录后回跳：仅允许同目录下的 html 页面，防开放重定向 */
+  var next = new URLSearchParams(location.search).get("next") || "";
+  if (!/^[A-Za-z0-9_-]+\.html(\?[^\s]*)?$/.test(next)) next = "index.html";
   var tabLogin = document.getElementById("tabLogin");
   var tabReg = document.getElementById("tabReg");
   var nameField = document.getElementById("nameField");
@@ -90,7 +93,7 @@
       localStorage.setItem("xb_user", JSON.stringify({ name: name, email: email }));
     } catch (err) {}
     showToast(mode === "reg" ? "注册成功，正在进入..." : "登录成功，正在进入...");
-    setTimeout(function () { window.location.href = "index.html"; }, 700);
+    setTimeout(function () { window.location.href = next; }, 700);
   });
 })();
 </script>

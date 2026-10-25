@@ -1,6 +1,7 @@
 /* 新笔文学社 · 基础版本 —— Service Worker
- * 策略：同源静态资源 cache-first（后台更新）；跨域请求（Supabase）直接走网络。 */
-var CACHE = "xinbi-basic-v1";
+ * 策略：导航请求 network-first（保证内容新鲜，离线回退缓存）；
+ *       同源静态资源 cache-first（后台更新）；跨域请求（Supabase）直接走网络。 */
+var CACHE = "xinbi-basic-v2";
 var SHELL = [
   "./",
   "./index.html",
@@ -38,6 +39,25 @@ self.addEventListener("fetch", function (e) {
   var url = new URL(req.url);
   if (url.origin !== self.location.origin) return; /* Supabase 等走网络 */
 
+  /* 导航请求：网络优先，失败回退缓存（离线可用） */
+  if (req.mode === "navigate") {
+    e.respondWith(
+      fetch(req).then(function (res) {
+        if (res && res.ok) {
+          var copy = res.clone();
+          caches.open(CACHE).then(function (c) { c.put(req, copy); });
+        }
+        return res;
+      }).catch(function () {
+        return caches.match(req).then(function (hit) {
+          return hit || caches.match("./index.html");
+        });
+      })
+    );
+    return;
+  }
+
+  /* 静态资源：缓存优先，后台更新 */
   e.respondWith(
     caches.match(req).then(function (hit) {
       var net = fetch(req).then(function (res) {
@@ -46,10 +66,7 @@ self.addEventListener("fetch", function (e) {
           caches.open(CACHE).then(function (c) { c.put(req, copy); });
         }
         return res;
-      }).catch(function () {
-        if (req.mode === "navigate") return caches.match("./index.html");
-        return hit;
-      });
+      }).catch(function () { return hit; });
       return hit || net;
     })
   );
