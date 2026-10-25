@@ -11,6 +11,12 @@
   "theme_color": "#8b3a3a",
   "icons": [
     {
+      "src": "assets/icons/emblem-mini.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
       "src": "assets/icons/icon.svg",
       "sizes": "any",
       "type": "image/svg+xml",

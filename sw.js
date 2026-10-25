@@ -1,7 +1,7 @@
 /* 新笔文学社 · 基础版本 —— Service Worker
  * 策略：导航请求 network-first（保证内容新鲜，离线回退缓存）；
  *       同源静态资源 cache-first（后台更新）；跨域请求（Supabase）直接走网络。 */
-var CACHE = "xinbi-basic-v8";
+var CACHE = "xinbi-basic-v9";
 var SHELL = [
   "./",
   "./index.html",
@@ -22,8 +22,11 @@ var SHELL = [
   "./assets/js/data.js",
   "./assets/js/config.js",
   "./assets/js/app.js",
+  "./assets/js/cloud.js",
   "./assets/vendor/workbuddy-cloud.js",
-  "./assets/icons/icon.svg"
+  "./assets/icons/icon.svg",
+  "./assets/icons/emblem.svg",
+  "./assets/icons/emblem-mini.svg"
 ];
 
 self.addEventListener("install", function (e) {

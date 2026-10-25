@@ -11,7 +11,8 @@
 <meta property="og:title" content="关于我们 - 新笔文学社">
 <meta property="og:locale" content="zh_CN">
 <link rel="manifest" href="manifest.json">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%238b3a3a'/%3E%3Ctext x='32' y='43' font-size='30' text-anchor='middle' fill='%23fff' font-family='serif'%3E新%3C/text%3E%3C/svg%3E">
+<link rel="icon" type="image/svg+xml" href="assets/icons/emblem-mini.svg">
+<link rel="apple-touch-icon" href="assets/icons/emblem-mini.svg">
 <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body data-page="about">
@@ -48,8 +49,8 @@
 </svg>
 
 <header class="header" id="header">
-  <a href="#main" class="logo">
-    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-feather"/></svg>
+  <a href="index.html" class="logo">
+    <img class="logo-mark" src="assets/icons/emblem.svg" alt="新笔文学社社徽" width="36" height="36">
     <span class="logo-t">新笔文学社<em>XINBI LITERARY SOCIETY</em></span>
   </a>
   <div class="head-right">
@@ -80,12 +81,53 @@
   </section>
 
   <div class="about-wrap">
+    <div class="guide-card rv on" id="seal">
+      <h2>社徽</h2>
+      <div class="brand-seal">
+        <img class="seal-lg" src="assets/icons/emblem.svg" alt="新笔文学社社徽" width="132" height="132">
+        <div>
+          <p style="font-size:.9rem;line-height:1.95;color:var(--ink-2);margin-bottom:12px">
+            朱砂方印，笔尖居中，右侧竖排「新笔」，印底标 1984。方印取传统印章之形，笔尖取社名之「笔」，年份提示这是一份有年头的刊物。
+          </p>
+          <div class="seal-meaning">
+            <p><b>笔尖</b>中缝与呼吸孔是钢笔尖的形制，象征写作本身。</p>
+            <p><b>方印</b>朱砂印面、双线内栏作边款，稳重而不呆板。</p>
+            <p><b>竖排「新笔」</b>沿用旧时刊头题字的排法。</p>
+            <p><b>1984</b>创社年份，与校史并置。</p>
+          </div>
+          <div class="seal-colors">
+            <span><i style="background:#8b3a3a"></i>朱砂 #8b3a3a</span>
+            <span><i style="background:#faf7f0"></i>宣纸 #faf7f0</span>
+            <span><i style="background:#b8964a"></i>鎏金 #b8964a</span>
+            <span><i style="background:#5b7a6a"></i>黛绿 #5b7a6a</span>
+          </div>
+          <div class="seal-download">
+            <a class="btn btn-l sm" href="assets/icons/emblem.svg" download>下载社徽（SVG）</a>
+            <a class="btn btn-l sm" href="assets/icons/emblem-mini.svg" download>下载小尺寸（64px）</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="guide-card rv on">
       <h2>社团简介</h2>
       <p class="about-lead" id="aboutLead"></p>
       <p class="about-lead">文学社由语文教研组指导，设编辑部、宣传部、策划部、外联部四个部门，负责社刊《年轻的心》的组稿、编辑、校对与发行，并组织诗会、笔会、征文赛与写作工作坊。社刊每年四期，至今已出 48 期。</p>
     </div>
 
+
+    <div class="guide-card rv on" id="school">
+      <h2>学校与社团</h2>
+      <div class="org-list">
+        <div class="org-item"><b>学校</b><span>岳阳县第二中学，1960 年创建，校址在岳阳县城荣家湾镇民中路；2007 年授牌「岳阳市示范性普通高中」。</span></div>
+        <div class="org-item"><b>规模</b><span>校园 150 亩，68 个教学班，3600 余名学生，275 名教职员工。</span></div>
+        <div class="org-item"><b>校训</b><span>求真、至善、厚德、泽人。</span></div>
+        <div class="org-item"><b>办学理念</b><span>让每一个学生成为最好的自己。</span></div>
+        <div class="org-item"><b>文学社</b><span>1984 年创建，承办校刊《新笔》与校报《心雨》，早期社刊为《年轻的心》；获评全国「十佳百优」文学社团、湖南省优秀文学社团。</span></div>
+        <div class="org-item"><b>社刊</b><span>四十余年间累计刊发学生作品数千篇，多篇被省市报刊转载；2012 年黄雪同学获「百变魔方」全国征文特等奖。</span></div>
+      </div>
+      <p class="ad-tip" style="margin-top:16px">资料来源：岳阳县人民政府网站《美丽校园之岳阳县二中》、学校官方公众号「社团之窗」专辑。本站作品与社员信息除标注为公开资料外，均为演示样例，正式上线前请由编辑部替换为真实内容。</p>
+    </div>
     <div class="guide-card rv on" id="org">
       <h2>组织机构</h2>
       <div class="org-list">
@@ -131,9 +173,11 @@
   <div class="si">
     <div class="foot-cols">
       <div class="foot-brand">
+        <img class="foot-seal" src="assets/icons/emblem.svg" alt="新笔文学社社徽" width="44" height="44">
         <h3>新笔文学社</h3>
-        <p>岳阳县第二中学 · 1984 年创社<br>社刊《年轻的心》· 已出 48 期</p>
+        <p>岳阳县第二中学 · 1984 年创社<br>校刊《新笔》· 校报《心雨》· 早期社刊《年轻的心》</p>
         <p style="margin-top:10px">以文会友 · 以笔写心 · 以书传情</p>
+        <p style="margin-top:6px;color:var(--gold)">校训：求真 · 至善 · 厚德 · 泽人</p>
       </div>
       <div>
         <h4>内容</h4>
