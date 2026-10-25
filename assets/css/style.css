@@ -1755,3 +1755,82 @@ body.dark .guide-step b { background: var(--gold); color: #1b1611; }
   .past-item { grid-template-columns: 1fr; gap: 4px; }
   .foot-cols { grid-template-columns: 1fr 1fr; gap: 20px; }
 }
+
+/* ============================================================
+ * v0.7：作者名录 / 作者页 / 社刊目录 / 今日条 / 评论盖楼
+ * ============================================================ */
+.author-wrap { max-width: var(--maxw); margin: 0 auto; padding: 8px 24px 80px; position: relative; z-index: 1; }
+.author-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
+.author-card {
+  display: flex; gap: 12px; align-items: center;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 14px 16px;
+  transition: transform .3s var(--ease), box-shadow .3s;
+}
+.author-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.avatar {
+  width: 42px; height: 42px; border-radius: 50%;
+  display: grid; place-items: center; color: #fff;
+  font-weight: 700; font-size: 1.05rem; flex: none;
+  font-family: var(--serif);
+}
+.author-name { display: block; font-weight: 700; font-size: .95rem; }
+.author-meta { display: block; font-size: .75rem; color: var(--ink-3); margin-top: 2px; }
+.author-head {
+  display: flex; gap: 20px; align-items: center;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius-lg); padding: 24px; margin-bottom: 26px;
+  box-shadow: var(--shadow-sm);
+}
+.author-head .avatar { width: 68px; height: 68px; font-size: 1.7rem; }
+.author-head h2 { font-size: 1.35rem; }
+.author-head p { font-size: .86rem; color: var(--ink-3); margin-top: 4px; }
+.author-stats { display: flex; gap: 24px; margin-top: 10px; }
+.author-stats span { font-size: .78rem; color: var(--ink-3); }
+.author-stats b { display: block; font-size: 1.15rem; color: var(--red); font-variant-numeric: tabular-nums; }
+body.dark .author-stats b { color: var(--gold); }
+
+/* 社刊目录 */
+.toc { display: grid; gap: 0; }
+.toc-row {
+  display: grid; grid-template-columns: 1fr 120px 56px;
+  gap: 12px; padding: 11px 0; border-bottom: 1px dashed var(--line);
+  font-size: .9rem; align-items: baseline;
+}
+.toc-row:last-child { border-bottom: none; }
+.toc-row .t { font-weight: 600; }
+.toc-row .a { color: var(--ink-3); font-size: .84rem; }
+.toc-row .p { text-align: right; color: var(--gold); font-variant-numeric: tabular-nums; font-size: .8rem; }
+.toc-row a:hover .t { color: var(--red); }
+.toc-type { font-size: .72rem; color: var(--ink-3); border: 1px solid var(--line-2); border-radius: 99px; padding: 1px 8px; margin-left: 8px; }
+
+/* 今日条 */
+.daily-strip {
+  position: relative; z-index: 1;
+  max-width: var(--maxw); margin: 16px auto 0; padding: 0 24px;
+  display: flex; gap: 14px; align-items: baseline; flex-wrap: wrap;
+}
+.daily-tag { font-size: .72rem; letter-spacing: .18em; color: var(--red); font-weight: 700; flex: none; }
+body.dark .daily-tag { color: var(--gold); }
+.daily-q { font-family: var(--kai); color: var(--ink-2); font-size: .92rem; line-height: 1.7; }
+.daily-q cite { font-style: normal; font-size: .78rem; color: var(--ink-3); margin-left: 6px; }
+.daily-work { margin-left: auto; font-size: .8rem; color: var(--gold); white-space: nowrap; }
+.daily-work:hover { text-decoration: underline; }
+
+/* 评论盖楼 */
+.cmt-reply-btn {
+  background: none; border: none; font-family: inherit; font-size: .74rem;
+  color: var(--ink-3); cursor: pointer; padding: 0; margin-left: 10px;
+}
+.cmt-reply-btn:hover { color: var(--red); }
+.comment-item { padding: 12px 0; border-bottom: 1px dashed var(--line); }
+.comment-item:last-child { border-bottom: none; }
+.cmt-replies { margin: 8px 0 0 20px; padding-left: 12px; border-left: 2px solid var(--line); display: grid; gap: 0; }
+.cmt-replies .comment-item { padding: 8px 0; border-bottom: none; }
+.cmt-replies .cmt-content { font-size: .85rem; }
+.cmt-target {
+  display: none; font-size: .76rem; color: var(--gold);
+  margin-bottom: 6px; align-items: center; gap: 8px;
+}
+.cmt-target.on { display: flex; }
+.cmt-target button { background: none; border: none; color: var(--ink-3); cursor: pointer; font-size: .9rem; }

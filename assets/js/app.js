@@ -270,7 +270,8 @@
       '<div class="wci">' + coverArt(w) + '<span class="wcbadge">' + esc(D.categories[w.category] || "") + "</span></div>" +
       '<div class="wcb">' +
       '<h3 class="bc-title">' + esc(w.title) + "</h3>" +
-      '<div class="wcm">' + esc(w.grade) + (w.class_name ? esc(w.class_name) + "班 · " : " · ") + esc(w.author) + "</div>" +
+      '<div class="wcm">' + esc(w.grade) + (w.class_name ? esc(w.class_name) + "班 · " : " · ") +
+      '<a href="authors.html?name=' + encodeURIComponent(w.author) + '">' + esc(w.author) + "</a></div>" +
       '<p class="wce">' + esc(w.excerpt) + "</p>" +
       '<div class="wcs">' + metaLine +
       '<button type="button" class="like-btn' + (liked ? " liked" : "") + '" data-id="' + w.id + '" aria-label="点赞">' + icon("heart", liked) + ' <span class="n">' + (w.likes + (liked ? 1 : 0)) + "</span></button>" +
@@ -381,59 +382,12 @@
   }
 
   /* ============================================================
-   * 评论（本地 + 云端合并）
+   * 评论（本地 + 云端合并，两级盖楼）
    * ============================================================ */
-  function commentsHtml(list, u) {
-    var html = "<h4>评论 (" + list.length + ")</h4>";
-    if (list.length) {
-      html += list.map(function (c) {
-        return '<div class="comment-item"><strong>' + esc(c.name) + '</strong><span class="cmt-time">' + esc(c.time) + (c.cloud ? " · 云端" : "") + '</span><div class="cmt-content">' + esc(c.content) + "</div></div>";
-      }).join("");
-    } else {
-      html += '<p class="cmt-empty">还没有评论，来发表第一条吧。</p>';
-    }
-    if (u) {
-      html += '<div class="cmt-input-row"><input id="cmtInput" placeholder="写下你的评论..." maxlength="200"><button type="button" class="btn btn-d" id="cmtPostBtn">发表</button></div>';
-    } else {
-      html += '<p class="cmt-login-hint">登录后即可评论 → <a href="' + loginUrl() + '">去登录</a></p>';
-    }
-    return html;
-  }
+  var replyTarget = null;
 
-  function bindCommentUI(id) {
-    on("#cmtPostBtn", "click", function () { postComment(id); });
-    on("#cmtInput", "keydown", function (e) { if (e.key === "Enter") postComment(id); });
-  }
-
-  function renderComments(id) {
-    var section = $("#comments-section");
-    if (!section) return;
-    var u = curUser();
-    section.innerHTML = commentsHtml(commentsOf(id), u);
-    bindCommentUI(id);
-    /* 云端评论合并补充 */
-    if (window.XB_CLOUD && XB_CLOUD.isReady()) {
-      XB_CLOUD.fetchComments(id).then(function (rows) {
-        if (!rows || !rows.length) return;
-        var list = commentsOf(id).slice();
-        var seen = {};
-        list.forEach(function (c) { seen[c.content + "|" + c.time] = true; });
-        var added = 0;
-        rows.forEach(function (r) {
-          var k = (r.content || "") + "|" + (r.created_at || "");
-          if (seen[k]) return;
-          seen[k] = true;
-          list.push({ name: r.author_name || "社员", content: r.content || "", time: fmtCloudTime(r.created_at), cloud: true });
-          added++;
-        });
-        if (!added) return;
-        var all = LS.get("comments", {});
-        all[String(id)] = list;
-        LS.set("comments", all);
-        section.innerHTML = commentsHtml(list, curUser());
-        bindCommentUI(id);
-      }).catch(function () {});
-    }
+  function ckey(c) {
+    return c.cloud ? ("C:" + c.id) : ("L:" + (c.time || "") + "|" + (c.content || ""));
   }
 
   function fmtCloudTime(iso) {
@@ -444,6 +398,117 @@
       String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
   }
 
+  /* 把评论整理成「顶层 + 其后代（拍平）」 */
+  function commentTree(list) {
+    list.forEach(function (c) { c._key = ckey(c); });
+    var byKey = {};
+    list.forEach(function (c) { byKey[c._key] = c; });
+    var tops = list.filter(function (c) { return !c.parentKey || !byKey[c.parentKey]; });
+    function desc(rootKey) {
+      var out = [], queue = [rootKey], guard = 0;
+      while (queue.length && guard++ < 200) {
+        var k = queue.shift();
+        list.forEach(function (c) {
+          if (c.parentKey === k && out.indexOf(c) < 0) { out.push(c); queue.push(c._key); }
+        });
+      }
+      return out;
+    }
+    return { tops: tops, desc: desc, byKey: byKey };
+  }
+
+  function commentHtml(c, parentName, u) {
+    var replyBtn = u ? '<button type="button" class="cmt-reply-btn" data-reply="' + esc(c._key) + '">回复</button>' : "";
+    return '<div class="comment-item">' +
+      "<div><strong>" + esc(c.name) + "</strong>" +
+      '<span class="cmt-time">' + esc(c.time) + (c.cloud ? " · 云端" : "") + "</span>" + replyBtn + "</div>" +
+      (parentName ? '<div class="cmt-content" style="font-size:.8rem;color:var(--ink-3);margin-bottom:2px">回复 @' + esc(parentName) + "</div>" : "") +
+      '<div class="cmt-content">' + esc(c.content) + "</div></div>";
+  }
+
+  function commentsHtml(list, u) {
+    var tree = commentTree(list);
+    var html = "<h4>评论 (" + list.length + ")</h4>";
+    if (tree.tops.length) {
+      html += '<div class="cmt-list">';
+      tree.tops.forEach(function (c) {
+        html += commentHtml(c, null, u);
+        var kids = tree.desc(c._key);
+        if (kids.length) {
+          html += '<div class="cmt-replies">' + kids.map(function (k) {
+            var p = tree.byKey[k.parentKey];
+            return commentHtml(k, p ? p.name : null, u);
+          }).join("") + "</div>";
+        }
+      });
+      html += "</div>";
+    } else {
+      html += '<p class="cmt-empty">还没有评论，来发表第一条吧。</p>';
+    }
+    if (u) {
+      html += '<div class="cmt-box"><div class="cmt-target' + (replyTarget ? " on" : "") + '" id="cmtTarget">' +
+        (replyTarget ? "正在回复 <b>@" + esc(replyTarget.name) + '</b> <button type="button" id="cmtCancel">×</button>' : "") +
+        '</div><div class="cmt-input-row"><input id="cmtInput" placeholder="' + (replyTarget ? "回复 @" + esc(replyTarget.name) + "…" : "写下你的评论…") + '" maxlength="200"><button type="button" class="btn btn-d" id="cmtPostBtn">发表</button></div></div>';
+    } else {
+      html += '<p class="cmt-login-hint">登录后即可评论 → <a href="' + loginUrl() + '">去登录</a></p>';
+    }
+    return html;
+  }
+
+  function bindCommentUI(id) {
+    on("#cmtPostBtn", "click", function () { postComment(id); });
+    on("#cmtInput", "keydown", function (e) { if (e.key === "Enter") postComment(id); });
+    on("#cmtCancel", "click", function () { replyTarget = null; renderComments(id); });
+    $$("#comments-section [data-reply]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var key = b.getAttribute("data-reply");
+        var found = null;
+        commentsCache.forEach(function (c) { if (ckey(c) === key) found = c; });
+        if (!found) return;
+        replyTarget = { key: key, name: found.name, cloud: !!found.cloud, id: found.id };
+        renderComments(id);
+        var inp = $("#cmtInput");
+        if (inp) inp.focus();
+      });
+    });
+  }
+
+  var commentsCache = [];
+
+  function renderComments(id) {
+    var section = $("#comments-section");
+    if (!section) return;
+    var u = curUser();
+    var local = commentsOf(id).map(function (c) {
+      return { name: c.name, content: c.content, time: c.time, parentKey: c.parentKey || null, cloud: false };
+    });
+    commentsCache = local.slice();
+    section.innerHTML = commentsHtml(local, u);
+    bindCommentUI(id);
+
+    if (window.XB_CLOUD && XB_CLOUD.isReady()) {
+      XB_CLOUD.fetchComments(id).then(function (rows) {
+        var cloudList = (rows || []).map(function (r) {
+          return {
+            id: r.id,
+            name: r.author_name || "社员",
+            content: r.content || "",
+            time: fmtCloudTime(r.created_at),
+            cloud: true,
+            parentKey: r.parent_id ? ("C:" + r.parent_id) : null
+          };
+        });
+        /* 云端评论在前（较新），本地里与云端内容重复的不再显示 */
+        var seen = {};
+        cloudList.forEach(function (c) { seen[c.name + "|" + c.content] = true; });
+        var localOnly = local.filter(function (c) { return !seen[c.name + "|" + c.content]; });
+        commentsCache = cloudList.concat(localOnly);
+        section.innerHTML = commentsHtml(commentsCache, curUser());
+        bindCommentUI(id);
+      }).catch(function () {});
+    }
+  }
+
   function postComment(workId) {
     var inp = $("#cmtInput");
     if (!inp || !inp.value.trim()) { toast("请先输入评论内容", "err"); return; }
@@ -452,23 +517,37 @@
     var wid = workId || (curWork ? curWork.id : null);
     if (!wid) { toast("评论失败：未选择作品", "err"); return; }
     var text = inp.value.trim();
+    var target = replyTarget;
+
+    /* 已登录云端 → 直接写库（保留盖楼关系），随后重拉 */
+    if (window.XB_CLOUD && XB_CLOUD.isReady() && u.cloud) {
+      XB_CLOUD.markInteraction(wid, "comment", true, {
+        content: text,
+        author_name: u.name,
+        parent_id: target && target.cloud ? target.id : null
+      }).then(function (r) {
+        if (r && r.error) { toast("评论失败：" + ((r.error && r.error.message) || "云端不可用"), "err"); return; }
+        replyTarget = null;
+        toast(target ? "回复已发表" : "评论已发表");
+        renderComments(wid);
+      }).catch(function () { toast("评论失败：网络异常", "err"); });
+      return;
+    }
+
+    /* 本地评论 */
     var all = LS.get("comments", {});
     var key = String(wid);
     if (!all[key]) all[key] = [];
-    all[key].unshift({ name: u.name, content: text, time: new Date().toLocaleString("zh-CN", { hour12: false }) });
+    all[key].unshift({
+      name: u.name,
+      content: text,
+      time: new Date().toLocaleString("zh-CN", { hour12: false }),
+      parentKey: target ? target.key : null
+    });
     LS.set("comments", all);
+    replyTarget = null;
     renderComments(wid);
-    /* 同步云端（已登录时） */
-    if (window.XB_CLOUD && XB_CLOUD.isReady() && u.cloud) {
-      XB_CLOUD.markInteraction(wid, "comment", true, { content: text, author_name: u.name })
-        .then(function (r) {
-          if (r && r.error) toast("评论已保存在本机，云端同步失败", "err");
-          else toast("评论已发表并同步到云端");
-        })
-        .catch(function () { toast("评论已保存在本机", "err"); });
-    } else {
-      toast("评论已发表（登录后可同步到云端）");
-    }
+    toast("评论已发表（本机保存，登录云端账号可同步）");
   }
 
   /* ============================================================
@@ -869,11 +948,13 @@
         '<ul class="jpieces">' + is.pieces.map(function (p) {
           return "<li><span class=\"jp-t\">" + esc(p.title) + '</span><span class="jp-m">' + esc(p.author) + " · " + esc(p.type) + '</span><span class="jp-p">' + esc(p.page) + "</span></li>";
         }).join("") + "</ul>" +
-        '<span class="btn btn-l sm jdl">下载本期 PDF（演示）</span>' +
+        '<a class="btn btn-l sm jdl" href="issue.html?no=' + is.no + '">在线阅读本期 →</a>' +
         "</div></div>";
     }).join("");
     $$(".jdl").forEach(function (b) {
-      b.addEventListener("click", function () { toast("演示版本：社刊 PDF 尚未接入", "err"); });
+      b.addEventListener("click", function (e) {
+        if (b.tagName !== "A") { e.preventDefault(); toast("演示版本：社刊 PDF 尚未接入", "err"); }
+      });
     });
     observeReveals();
   }
@@ -1138,6 +1219,7 @@
       return "<div class='past-item'><div class='past-date'>" + esc(p.date) + "</div><div><h3>" + esc(p.title) + "</h3><p>" + esc(p.desc) + "</p></div></div>";
     }).join("");
 
+    renderDaily();
     observeReveals();
   }
 
@@ -1240,6 +1322,147 @@
     renderIndexSections();
   }
 
+  /* 今日诗签 + 今日推荐（按日期轮换） */
+  function renderDaily() {
+    var daily = $("#dailyStrip");
+    if (!daily) return;
+    var seed = Math.floor(Date.now() / 86400000);
+    var qs = D.site.quotes || [];
+    var q = qs.length ? qs[seed % qs.length] : null;
+    var ws = DATA.works || [];
+    var w = ws.length ? ws[seed % ws.length] : null;
+    daily.innerHTML = (q ? "<span class='daily-tag'>今日诗签</span><p class='daily-q'>" + esc(q.text) + "<cite>—— " + esc(q.from) + "</cite></p>" : "") +
+      (w ? "<a class='daily-work' href='work.html?id=" + w.id + "'>今日推荐：《" + esc(w.title) + "》→</a>" : "");
+  }
+
+  /* 作者名录 / 作者主页 */
+  var HUES = ["#8b3a3a", "#b8964a", "#5b7a6a", "#9c6b3f", "#33506b", "#6e2f2a"];
+
+  function authorIndex() {
+    var by = {};
+    DATA.works.forEach(function (w) {
+      var k = w.author || "佚名";
+      if (!by[k]) by[k] = { name: k, works: [], likes: 0 };
+      by[k].works.push(w);
+      by[k].likes += (w.likes || 0);
+    });
+    return Object.keys(by).map(function (k) { return by[k]; })
+      .sort(function (a, b) { return b.works.length - a.works.length || b.likes - a.likes; });
+  }
+
+  function initAuthorsPage() {
+    var grid = $("#authorGrid");
+    if (!grid) return;
+
+    function paint() {
+      var list = authorIndex();
+      var name = new URLSearchParams(location.search).get("name");
+      var one = name ? list.filter(function (a) { return a.name === name; })[0] : null;
+      if (one) { renderAuthor(one); return; }
+
+      var wrap = $("#authorWorks");
+      if (wrap) wrap.style.display = "none";
+      var old = $("#authorHead");
+      if (old) old.parentNode.removeChild(old);
+      grid.style.display = "grid";
+      $("#authorHero").querySelector("h1").textContent = "作者名录";
+      $("#authorSub").innerHTML = "为本刊写过字的人 · " + list.length + " 位作者 · " + DATA.works.length + " 篇作品";
+      grid.innerHTML = list.map(function (a, i) {
+        var g = a.works[0] || {};
+        return "<a class='author-card' href='authors.html?name=" + encodeURIComponent(a.name) + "'>" +
+          "<span class='avatar' style='background:" + HUES[i % HUES.length] + "'>" + esc((a.name || "?").slice(0, 1)) + "</span>" +
+          "<span><span class='author-name'>" + esc(a.name) + "</span>" +
+          "<span class='author-meta'>" + esc((g.grade || "") + (g.class_name ? g.class_name + "班" : "")) + " · " + a.works.length + " 篇 · " + a.likes + " 喜欢</span></span></a>";
+      }).join("");
+    }
+
+    function renderAuthor(a) {
+      grid.style.display = "none";
+      var wrap = $("#authorWorks");
+      if (!wrap) return;
+      wrap.style.display = "block";
+      var g = a.works[0] || {};
+      var member = (D.members || []).filter(function (m) { return m.name === a.name; })[0];
+      var cats = {};
+      a.works.forEach(function (w) { cats[w.category] = (cats[w.category] || 0) + 1; });
+      var old = $("#authorHead");
+      if (old) old.parentNode.removeChild(old);
+      var head = document.createElement("div");
+      head.className = "author-head rv on";
+      head.id = "authorHead";
+      head.innerHTML = "<span class='avatar' style='background:" + (member ? member.hue : "#8b3a3a") + "'>" + esc((a.name || "?").slice(0, 1)) + "</span>" +
+        "<div><h2>" + esc(a.name) + "</h2><p>" + esc((g.grade || "") + (g.class_name ? g.class_name + "班" : "")) + (member ? " · " + esc(member.role) : "") + "</p>" +
+        (member ? "<p style='color:var(--ink-2);margin-top:8px;font-family:var(--kai)'>“" + esc(member.quote) + "”</p>" : "") +
+        "<div class='author-stats'><span><b>" + a.works.length + "</b>篇作品</span><span><b>" + a.likes + "</b>获喜欢</span><span><b>" + Object.keys(cats).length + "</b>种文体</span></div></div>";
+      wrap.insertBefore(head, wrap.firstChild);
+      $("#authorHero").querySelector("h1").textContent = a.name;
+      $("#authorSub").innerHTML = "作者主页 · 新笔文学社";
+      $("#awTitle").textContent = "全部作品";
+      $("#awGrid").innerHTML = a.works.map(workCard).join("");
+      document.title = a.name + " - 新笔文学社";
+      observeReveals();
+    }
+
+    paint();
+    loadCloudData().then(function () { paint(); });
+  }
+
+  /* 社刊期号页 */
+  function initIssuePage() {
+    var no = parseInt(new URLSearchParams(location.search).get("no"), 10);
+    var idx = 0;
+    (D.journal.issues || []).forEach(function (is, i) { if (is.no === no) idx = i; });
+
+    function paint() {
+      var list = D.journal.issues || [];
+      var is = list[idx] || list[0];
+      if (!is) return;
+      $("#issueTitle").textContent = "第" + is.no + "期 · " + is.theme;
+      $("#issueMeta").textContent = "《年轻的心》 · " + is.date + " · " + is.term + "季刊";
+      document.title = "第" + is.no + "期 " + is.theme + " - 新笔文学社";
+
+      var pieces = is.pieces || [];
+      $("#issueToc").innerHTML = pieces.map(function (p) {
+        var w = DATA.works.filter(function (x) { return x.title === p.title; })[0];
+        var title = w
+          ? "<a href='work.html?id=" + w.id + "'><span class='t'>" + esc(p.title) + "</span></a>"
+          : "<span class='t'>" + esc(p.title) + "</span>";
+        return "<div class='toc-row'><div>" + title + "<span class='toc-type'>" + esc(p.type) + "</span></div><div class='a'>" + esc(p.author) + "</div><div class='p'>" + esc(p.page) + "</div></div>";
+      }).join("") || "<p class='ad-empty'>本期目录整理中</p>";
+
+      var pw = $("#issuePrefaceWrap");
+      if (idx === 0 && D.site.preface) {
+        pw.style.display = "block";
+        $("#issuePreface").innerHTML = D.site.preface.paragraphs.map(function (t) {
+          return "<p style='text-indent:2em;line-height:2;color:var(--ink-2);margin-bottom:.8em'>" + esc(t) + "</p>";
+        }).join("") + "<p style='text-align:right;color:var(--ink-3);font-size:.85rem'>—— " + esc(D.site.preface.author) + "</p>";
+      } else {
+        pw.style.display = "none";
+      }
+
+      var works = pieces.map(function (p) {
+        return DATA.works.filter(function (x) { return x.title === p.title; })[0];
+      }).filter(Boolean);
+      var ww = $("#issueWorksWrap");
+      if (works.length) {
+        ww.style.display = "block";
+        $("#issueWorks").innerHTML = works.map(workCard).join("");
+      } else {
+        ww.style.display = "none";
+      }
+
+      var prev = list[idx + 1], next = list[idx - 1];
+      $("#issueNav").innerHTML =
+        (next ? "<a class='btn btn-l sm' href='issue.html?no=" + next.no + "'>← 第" + next.no + "期</a>" : "<span></span>") +
+        "<a class='btn btn-l sm' href='journal.html'>全部往期</a>" +
+        (prev ? "<a class='btn btn-l sm' href='issue.html?no=" + prev.no + "'>第" + prev.no + "期 →</a>" : "<span></span>");
+      observeReveals();
+    }
+
+    paint();
+    loadCloudData().then(function () { paint(); });
+  }
+
   /* ============================================================
    * 启动
    * ============================================================ */
@@ -1309,13 +1532,15 @@
     if (page === "work") renderWorkPage();
     if (page === "journal") renderJournal();
     if (page === "works") initWorksPage();
+    if (page === "authors") initAuthorsPage();
+    if (page === "issue") initIssuePage();
     if (page === "guide") initGuidePage();
     if (page === "about") initAboutPage();
     if (page === "journal") {
       loadCloudData().then(function (cloud) { if (cloud) { renderJournal(); } });
     }
 
-    if (page === "index" || page === "work" || page === "journal" || page === "works" || page === "guide" || page === "about") {
+    if (page === "index" || page === "work" || page === "journal" || page === "works" || page === "guide" || page === "about" || page === "authors" || page === "issue") {
       var y = $("#year");
       if (y) y.textContent = new Date().getFullYear();
     }
