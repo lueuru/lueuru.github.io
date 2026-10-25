@@ -57,8 +57,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-user"/></svg>
       <h2>请先登录</h2>
       <p>内容管理后台需要登录后访问（基础版本为本地演示登录）。</p>
-      <a class="btn btn-d" href="login.html?next=admin.html">去登录</a>
-      <a class="login-back" href="index.html">← 返回首页</a>
+      <a class="btn btn-d" href="login.html?next=admin.html">去登录</a>      <a class="login-back" href="index.html">← 返回首页</a>
     </div>
   </div>
 
@@ -70,6 +69,7 @@
         <p class="ad-sub">本地演示后台 · 编辑保存在本机浏览器，全站即时生效</p>
       </div>
       <div class="ad-head-ops">
+        <span class="ad-dot" id="adDot"></span>
         <span class="ad-mode">当前模式：<strong id="adMode">—</strong></span>
         <button class="btn btn-l sm" id="adModeToggle" type="button">切换模式</button>
         <button class="btn btn-l sm" id="adLogout" type="button">退出（<span id="adUserName">—</span>）</button>
@@ -191,6 +191,7 @@
 
 <script src="assets/js/data.js"></script>
 <script src="assets/js/config.js"></script>
+<script src="assets/js/cloud.js"></script>
 <script src="assets/js/app.js"></script>
 <script src="assets/js/admin.js"></script>
 <script>

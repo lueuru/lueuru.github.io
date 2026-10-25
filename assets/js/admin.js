@@ -1,7 +1,7 @@
 /* ============================================================
- * 新笔文学社 · 基础版本 —— 内容管理后台（admin.html）
- * 本地演示级后台：所有编辑保存在本机 localStorage 覆盖层中，
- * 全站页面读取同一覆盖层生效；可导出 JSON 交接、可恢复默认。
+ * 新笔文学社 · 基础版本 v0.5 —— 内容管理后台（admin.html）
+ * 数据源优先级：云端作品库 → 本地语料 + 本地草稿覆盖层
+ * 写入：已登录 → 写入云端（全局共享）；未登录 → 仅写本地草稿
  * ============================================================ */
 window.XB_ADMIN = (function () {
   "use strict";
@@ -18,16 +18,12 @@ window.XB_ADMIN = (function () {
     del: function (k) { try { localStorage.removeItem("xb_" + k); } catch (e) {} }
   };
 
-  var CATS = ["prose", "poetry", "fiction", "essay"];
-  var HUES = ["#8b3a3a", "#b8964a", "#5b7a6a", "#9c6b3f", "#33506b", "#6e2f2a"];
+  var ADMIN = { works: [], events: [], members: [], issues: [], source: "local", cloud: false, user: null };
   var editingWorkId = null;
+  var editingWorkCloud = false;
+  var editingWorkSlug = "";
+  var dirtyKeys = {};
 
-  function overlay() {
-    var ov = LS.get("overlay", null);
-    if (!ov) ov = { useLocal: false, works: {}, deletedWorks: [], events: null, members: null, journal: null };
-    return ov;
-  }
-  function saveOverlay(ov) { LS.set("overlay", ov); }
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -41,27 +37,116 @@ window.XB_ADMIN = (function () {
     clearTimeout(e._t);
     e._t = setTimeout(function () { e.classList.remove("show"); }, 2200);
   }
+  function on(sel, ev, fn) { var el = $(sel); if (el) el.addEventListener(ev, fn); }
 
-  /* 合并后的当前数据集（与前台一致） */
-  function currentWorks() {
+  /* ---------- 本地覆盖层 ---------- */
+  function overlay() {
+    var ov = LS.get("overlay", null);
+    if (!ov) ov = { useLocal: false, works: {}, deletedWorks: [], events: null, members: null, journal: null };
+    return ov;
+  }
+  function saveOverlay(ov) { LS.set("overlay", ov); }
+
+  /* ---------- 数据装载 ---------- */
+  function localCorpus() {
+    var corpus = {};
+    D.works.forEach(function (w) { corpus[w.title] = w; });
+    return corpus;
+  }
+
+  function hydrateContent(row, corpus) {
+    var local = corpus[row.slug] || corpus[row.title];
+    var content = (row.content && row.content.length) ? row.content : (local ? local.content : null);
+    return content && content.length ? content : ["（正文待补充）"];
+  }
+
+  function applyLocalOverlay(list, key) {
     var ov = overlay();
-    if (!ov.useLocal) return D.works.slice();
+    if (key) return ov[key] ? ov[key] : list.slice();
     var del = ov.deletedWorks || [];
-    var list = D.works.filter(function (w) { return del.indexOf(w.id) < 0; }).map(function (w) {
+    var arr = list.filter(function (w) { return del.indexOf(w.id) < 0; }).map(function (w) {
       return (ov.works && ov.works[w.id]) || w;
     });
-    if (ov.works) Object.keys(ov.works).forEach(function (k) { if (ov.works[k]._new) list.push(ov.works[k]); });
-    return list;
+    if (ov.works) Object.keys(ov.works).forEach(function (k) { if (ov.works[k]._new) arr.push(ov.works[k]); });
+    return arr;
   }
-  function currentEvents() { var ov = overlay(); return ov.events || D.events; }
-  function currentMembers() { var ov = overlay(); return ov.members || D.members; }
-  function currentJournal() { var ov = overlay(); return ov.journal || D.journal.issues; }
 
-  /* ============================================================
-   * 作品管理
-   * ============================================================ */
+  function loadData() {
+    if (!window.XB_CLOUD) {
+      fallbackLocal();
+      return Promise.resolve(false);
+    }
+    return XB_CLOUD.load().then(function () {
+      return XB_CLOUD.session().then(function (s) {
+        if (s && s.user) { ADMIN.cloud = true; ADMIN.user = s.user; }
+      });
+    }).then(function () {
+      return Promise.all([
+        XB_CLOUD.fetchWorks(),
+        XB_CLOUD.fetchContent("event"),
+        XB_CLOUD.fetchContent("member"),
+        XB_CLOUD.fetchContent("issue")
+      ]);
+    }).then(function (res) {
+      var corpus = localCorpus();
+      var works = res[0], events = res[1], members = res[2], issues = res[3];
+      if (works && works.length) {
+        ADMIN.works = works.map(function (row) {
+          return {
+            cloud_id: row.id,
+            id: row.id,
+            slug: row.slug || row.title,
+            title: row.title,
+            author: row.author,
+            grade: row.grade || "",
+            class_name: row.class_name || "",
+            category: row.category || "essay",
+            excerpt: row.excerpt || "",
+            content: hydrateContent(row, corpus),
+            likes: row.likes || 0,
+            bookmarks: row.bookmarks || 0
+          };
+        });
+      } else {
+        ADMIN.works = applyLocalOverlay(D.works);
+      }
+      if (events) {
+        ADMIN.events = events.map(function (r) {
+          var b = r.body || {};
+          return { slug: r.slug, title: r.title || b.title || "活动", days: b.days || 14, time: b.time || "18:00-20:00", loc: b.loc || "待定", desc: b.desc || "" };
+        });
+      } else {
+        ADMIN.events = applyLocalOverlay(D.events, "events");
+      }
+      if (members) {
+        ADMIN.members = members.map(function (r) {
+          var b = r.body || {};
+          return { slug: r.slug, name: r.title || b.name || "社员", role: b.role || "社员", quote: b.quote || "", bio: b.bio || "", hue: b.hue || "#8b3a3a" };
+        });
+      } else {
+        ADMIN.members = applyLocalOverlay(D.members, "members");
+      }
+      if (issues) ADMIN.issues = issues.map(function (r) { return r.body || {}; });
+      else ADMIN.issues = applyLocalOverlay(D.journal.issues, "journal");
+      ADMIN.source = (works || events || members || issues) ? "cloud" : "local";
+      return true;
+    }).catch(function () {
+      fallbackLocal();
+      return false;
+    });
+  }
+
+  function fallbackLocal() {
+    ADMIN.works = applyLocalOverlay(D.works);
+    ADMIN.events = applyLocalOverlay(D.events, "events");
+    ADMIN.members = applyLocalOverlay(D.members, "members");
+    ADMIN.issues = applyLocalOverlay(D.journal.issues, "journal");
+    ADMIN.source = "local";
+  }
+
+  /* ---------- 作品管理 ---------- */
   function renderWorks() {
-    var list = currentWorks();
+    var list = ADMIN.works;
     $("#wkCount").textContent = "共 " + list.length + " 篇";
     var html = "";
     list.forEach(function (w, i) {
@@ -71,24 +156,33 @@ window.XB_ADMIN = (function () {
         "<td>" + esc(w.author) + "</td>" +
         "<td>" + esc(w.grade || "") + (w.class_name ? esc(w.class_name) + "班" : "") + "</td>" +
         "<td>" + esc(D.categories[w.category] || w.category) + "</td>" +
-        "<td>" + (w.remote ? "远端" : "本地") + "</td>" +
+        "<td>" + (w.cloud_id ? "云端" : "本机") + "</td>" +
         "<td class='ad-ops'>" +
-        "<button class='ad-mini' data-edit='" + w.id + "'>编辑</button>" +
-        "<button class='ad-mini danger' data-del='" + w.id + "'>删除</button>" +
+        "<button class='ad-mini' data-edit='" + esc(String(w.cloud_id || w.id)) + "'>编辑</button>" +
+        "<button class='ad-mini danger' data-del='" + esc(String(w.cloud_id || w.id)) + "'>删除</button>" +
         "</td></tr>";
     });
     $("#wkRows").innerHTML = html || "<tr><td colspan='7' class='ad-empty'>暂无作品，点击“新增作品”开始</td></tr>";
     $$("#wkRows [data-edit]").forEach(function (b) {
-      b.addEventListener("click", function () { openWorkEditor(parseInt(b.dataset.edit, 10)); });
+      b.addEventListener("click", function () { openWorkEditor(b.dataset.edit); });
     });
     $$("#wkRows [data-del]").forEach(function (b) {
-      b.addEventListener("click", function () { deleteWork(parseInt(b.dataset.del, 10)); });
+      b.addEventListener("click", function () { deleteWork(b.dataset.del); });
     });
   }
 
-  function openWorkEditor(id) {
-    editingWorkId = id || null;
-    var w = id ? currentWorks().filter(function (x) { return x.id === id; })[0] : null;
+  function findWork(key) {
+    for (var i = 0; i < ADMIN.works.length; i++) {
+      if (String(ADMIN.works[i].cloud_id || ADMIN.works[i].id) === String(key)) return ADMIN.works[i];
+    }
+    return null;
+  }
+
+  function openWorkEditor(key) {
+    var w = key ? findWork(key) : null;
+    editingWorkId = w ? (w.cloud_id || w.id) : null;
+    editingWorkCloud = w ? !!w.cloud_id : false;
+    editingWorkSlug = w ? (w.slug || w.title) : "";
     $("#weTitle").value = w ? w.title : "";
     $("#weAuthor").value = w ? w.author : "";
     $("#weGrade").value = w ? (w.grade || "") : "";
@@ -104,52 +198,79 @@ window.XB_ADMIN = (function () {
     var title = $("#weTitle").value.trim();
     var author = $("#weAuthor").value.trim();
     if (!title || !author) { toast("标题和作者不能为空", "err"); return; }
-    var ov = overlay();
-    ov.useLocal = true;
     var content = $("#weContent").value.split(/\r?\n\s*\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
-    var work = {
-      id: editingWorkId || Date.now(),
+    var payload = {
+      slug: editingWorkSlug || title,
       title: title,
       author: author,
       grade: $("#weGrade").value.trim(),
       class_name: $("#weClass").value.trim(),
       category: $("#weCat").value,
-      tags: [],
-      rating: 0,
       excerpt: $("#weExcerpt").value.trim() || (content[0] || "").slice(0, 80),
-      content: content.length ? content : ["（正文待补充）"],
-      likes: 0,
-      bookmarks: 0,
-      created_at: new Date().toISOString(),
-      remote: false
+      content: content.length ? content : ["（正文待补充）"]
     };
-    if (!ov.works) ov.works = {};
-    if (!editingWorkId) work._new = true;
-    ov.works[work.id] = work;
-    saveOverlay(ov);
     $("#workEditor").classList.remove("open");
-    renderWorks();
-    updateModeLabel();
-    toast(editingWorkId ? "作品已更新" : "作品已新增，去首页看看效果");
-  }
 
-  function deleteWork(id) {
-    if (!confirm("确定删除这篇作品吗？（可在“数据”页恢复默认）")) return;
+    /* 本机草稿 */
     var ov = overlay();
     ov.useLocal = true;
-    if (ov.works && ov.works[id]) delete ov.works[id];
-    if (ov.deletedWorks.indexOf(id) < 0) ov.deletedWorks.push(id);
+    if (!ov.works) ov.works = {};
+    if (!ov.deletedWorks) ov.deletedWorks = [];
+    var localId = editingWorkCloud ? editingWorkId : (Date.now());
+    var localRow = {
+      id: localId,
+      title: payload.title, author: payload.author, grade: payload.grade, class_name: payload.class_name,
+      category: payload.category, excerpt: payload.excerpt, content: payload.content,
+      likes: 0, bookmarks: 0, slug: payload.slug
+    };
+    if (!editingWorkCloud) localRow._new = true;
+    ov.works[localId] = localRow;
     saveOverlay(ov);
+
+    if (ADMIN.cloud && window.XB_CLOUD) {
+      XB_CLOUD.saveWork({
+        id: editingWorkCloud ? editingWorkId : null,
+        slug: payload.slug, title: payload.title, author: payload.author,
+        grade: payload.grade, class_name: payload.class_name,
+        category: payload.category, excerpt: payload.excerpt, content: payload.content
+      }).then(function (r) {
+        if (r && r.error) { toast("云端保存失败：已存为本机草稿", "err"); return; }
+        toast("已保存到云端作品库，全站可见");
+        return loadData().then(function () { renderAll(); updateModeLabel(); });
+      }).catch(function () { toast("云端保存失败：已存为本机草稿", "err"); });
+    } else {
+      toast("已保存为本机草稿（登录后同步到云端）");
+    }
     renderWorks();
     updateModeLabel();
-    toast("作品已删除");
   }
 
-  /* ============================================================
-   * 活动 / 社员 / 社刊（分区保存）
-   * ============================================================ */
+  function deleteWork(key) {
+    if (!confirm("确定删除这篇作品吗？")) return;
+    var w = findWork(key);
+    if (!w) return;
+    var ov = overlay();
+    ov.useLocal = true;
+    if (!ov.works) ov.works = {};
+    if (!ov.deletedWorks) ov.deletedWorks = [];
+    delete ov.works[w.cloud_id || w.id];
+    if (ov.deletedWorks.indexOf(w.cloud_id || w.id) < 0) ov.deletedWorks.push(w.cloud_id || w.id);
+    saveOverlay(ov);
+    if (ADMIN.cloud && w.cloud_id && window.XB_CLOUD) {
+      XB_CLOUD.deleteWork(w.cloud_id).then(function (r) {
+        if (r && r.error) { toast("云端删除失败：本机已移除", "err"); return; }
+        toast("已从云端作品库删除");
+      }).catch(function () { toast("云端删除失败：本机已移除", "err"); });
+    } else {
+      toast("已从本机移除");
+    }
+    renderWorks();
+    updateModeLabel();
+  }
+
+  /* ---------- 活动 / 社员 / 社刊 ---------- */
   function renderEvents() {
-    var list = currentEvents();
+    var list = ADMIN.events;
     $("#evCount").textContent = "共 " + list.length + " 项";
     $("#evRows").innerHTML = list.map(function (ev, i) {
       return "<div class='ad-item' data-i='" + i + "'>" +
@@ -167,7 +288,7 @@ window.XB_ADMIN = (function () {
   }
 
   function renderMembers() {
-    var list = currentMembers();
+    var list = ADMIN.members;
     $("#mbCount").textContent = "共 " + list.length + " 人";
     $("#mbRows").innerHTML = list.map(function (m, i) {
       return "<div class='ad-item' data-i='" + i + "'>" +
@@ -177,14 +298,14 @@ window.XB_ADMIN = (function () {
         "<label>职务<input data-mb='role' value='" + esc(m.role) + "'></label>" +
         "<label>寄语<input data-mb='quote' value='" + esc(m.quote) + "'></label>" +
         "<label>简介<input data-mb='bio' value='" + esc(m.bio) + "'></label>" +
-        "<label>主题色<input data-mb='hue' type='color' value='" + (m.hue || "#8b3a3a") + "'></label>" +
+        "<label>主题色<input data-mb='hue' type='color' value='" + esc(m.hue || "#8b3a3a") + "'></label>" +
         "</div></div>";
     }).join("");
     bindSection("mb");
   }
 
   function renderJournal() {
-    var list = currentJournal();
+    var list = ADMIN.issues;
     $("#jrCount").textContent = "共 " + list.length + " 期";
     $("#jrRows").innerHTML = list.map(function (is, i) {
       var pieces = (is.pieces || []).map(function (p) {
@@ -205,8 +326,6 @@ window.XB_ADMIN = (function () {
     bindSection("jr");
   }
 
-  /* 分区通用：读取表单 → 写覆盖层 */
-  var dirtyKeys = {};
   function markDirty(key) {
     if (dirtyKeys[key]) return;
     dirtyKeys[key] = true;
@@ -220,8 +339,7 @@ window.XB_ADMIN = (function () {
   }
 
   function bindSection(key) {
-    var sel = "[data-" + key + "]";
-    $$("#" + key + "Rows " + sel).forEach(function (el) {
+    $$("#" + key + "Rows [data-" + key + "]").forEach(function (el) {
       el.addEventListener("input", function () { markDirty(key); });
     });
     $$("#" + key + "Rows [data-" + key + "del]").forEach(function (b) {
@@ -236,9 +354,9 @@ window.XB_ADMIN = (function () {
   }
 
   function currentList(key) {
-    if (key === "ev") return currentEvents().slice();
-    if (key === "mb") return currentMembers().slice();
-    return currentJournal().slice();
+    if (key === "ev") return ADMIN.events.slice();
+    if (key === "mb") return ADMIN.members.slice();
+    return ADMIN.issues.slice();
   }
   function renderSection(key) {
     if (key === "ev") renderEvents();
@@ -253,6 +371,9 @@ window.XB_ADMIN = (function () {
     else if (key === "mb") ov.members = list;
     else ov.journal = list;
     saveOverlay(ov);
+    if (key === "ev") ADMIN.events = list;
+    else if (key === "mb") ADMIN.members = list;
+    else ADMIN.issues = list;
   }
 
   function saveSection(key) {
@@ -278,30 +399,47 @@ window.XB_ADMIN = (function () {
     writeSection(key, items);
     renderSection(key);
     clearDirty(key);
-    toast("已保存，前台即时生效");
+
+    if (ADMIN.cloud && window.XB_CLOUD) {
+      var kind = key === "ev" ? "event" : key === "mb" ? "member" : "issue";
+      var chain = Promise.resolve();
+      items.forEach(function (it, idx) {
+        chain = chain.then(function () {
+          var slug = it.slug || (kind + "-" + (idx + 1));
+          var title = kind === "event" ? it.title : kind === "member" ? it.name : ("第" + it.no + "期 " + it.theme);
+          var body = kind === "event" ? { days: it.days, time: it.time, loc: it.loc, desc: it.desc }
+            : kind === "member" ? { role: it.role, quote: it.quote, bio: it.bio, hue: it.hue, name: it.name }
+            : it;
+          return XB_CLOUD.saveContent(kind, slug, title, body, idx + 1);
+        });
+      });
+      chain.then(function (r) {
+        if (r && r.error) { toast("云端同步失败：已存为本机", "err"); return; }
+        toast("已保存并同步到云端，全站可见");
+      }).catch(function () { toast("云端同步失败：已存为本机", "err"); });
+    } else {
+      toast("已保存为本机草稿（登录后同步到云端）");
+    }
   }
 
   function addSectionItem(key) {
     var list = currentList(key);
     if (key === "ev") list.push({ title: "新活动", days: 14, time: "18:00-20:00", loc: "待定", desc: "活动简介" });
-    else if (key === "mb") list.push({ name: "新社员", role: "社员", quote: "一句话寄语", bio: "简介", hue: HUES[list.length % HUES.length] });
+    else if (key === "mb") list.push({ name: "新社员", role: "社员", quote: "一句话寄语", bio: "简介", hue: "#8b3a3a" });
     else list.push({ no: (list.length ? list[0].no + 1 : 48), year: new Date().getFullYear(), term: "春", theme: "新一期", date: new Date().getFullYear() + "年4月", pieces: [] });
     writeSection(key, list);
     renderSection(key);
-    toast("已添加，向下滚动填写内容");
+    toast("已添加，向下滚动填写内容后保存");
   }
 
-  /* ============================================================
-   * 数据：导出 / 导入 / 恢复 / 记录
-   * ============================================================ */
+  /* ---------- 数据页 ---------- */
   function exportJSON() {
     var data = {
-      _meta: { app: "xinbi-basic", exportedAt: new Date().toISOString() },
-      overlay: overlay(),
-      works: currentWorks(),
-      events: currentEvents(),
-      members: currentMembers(),
-      journal: currentJournal()
+      _meta: { app: "xinbi-basic", exportedAt: new Date().toISOString(), source: ADMIN.source },
+      works: ADMIN.works,
+      events: ADMIN.events,
+      members: ADMIN.members,
+      journal: ADMIN.issues
     };
     var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     var a = document.createElement("a");
@@ -317,15 +455,13 @@ window.XB_ADMIN = (function () {
     reader.onload = function () {
       try {
         var data = JSON.parse(reader.result);
-        var ov = data.overlay || data;
-        if (!ov || typeof ov !== "object") throw new Error("bad format");
-        ov.useLocal = true;
-        if (!ov.works) ov.works = {};
-        if (!ov.deletedWorks) ov.deletedWorks = [];
-        saveOverlay(ov);
+        if (!data || !Array.isArray(data.works)) throw new Error("bad");
+        ADMIN.works = data.works;
+        if (Array.isArray(data.events)) ADMIN.events = data.events;
+        if (Array.isArray(data.members)) ADMIN.members = data.members;
+        if (Array.isArray(data.journal)) ADMIN.issues = data.journal;
         renderAll();
-        updateModeLabel();
-        toast("导入成功，前台已生效");
+        toast("已导入到本机草稿（登录后可同步到云端）");
       } catch (e) {
         toast("导入失败：文件格式不正确", "err");
       }
@@ -334,37 +470,60 @@ window.XB_ADMIN = (function () {
   }
 
   function resetAll() {
-    if (!confirm("恢复默认将清空所有本地编辑（作品/活动/社员/社刊），确定吗？")) return;
+    if (!confirm("恢复默认将清空本机的所有草稿编辑（云端数据不受影响），确定吗？")) return;
     LS.del("overlay");
-    renderAll();
-    updateModeLabel();
-    toast("已恢复默认数据");
+    loadData().then(function () { renderAll(); updateModeLabel(); toast("已恢复默认数据"); });
   }
 
   function renderRecords() {
-    var subs = LS.get("submissions", []);
-    var apps = LS.get("applications", []);
-    var html = "<h4>本地投稿记录（" + subs.length + "）</h4>";
-    html += subs.length ? subs.map(function (s) {
-      return "<div class='ad-rec'><strong>" + esc(s.sTitle || "无题") + "</strong> · " + esc(s.sName || "") + " · " + esc(s._time || "") + "</div>";
-    }).join("") : "<p class='ad-empty'>暂无</p>";
-    html += "<h4 style='margin-top:16px'>加入申请记录（" + apps.length + "）</h4>";
-    html += apps.length ? apps.map(function (a) {
-      return "<div class='ad-rec'><strong>" + esc(a.mName || "") + "</strong> · " + esc(a.mGrade || "") + " · " + esc(a._time || "") + "</div>";
-    }).join("") : "<p class='ad-empty'>暂无</p>";
-    $("#adRecords").innerHTML = html;
+    var box = $("#adRecords");
+    if (!box) return;
+    function paint(subs, apps) {
+      var html = "<h4>云端投稿记录（" + subs.length + "）</h4>";
+      html += subs.length ? subs.map(function (s) {
+        return "<div class='ad-rec'><strong>" + esc(s.title || "无题") + "</strong> · " + esc(s.author || "") + " · " + esc(String(s.created_at || "").slice(0, 16)) + "</div>";
+      }).join("") : "<p class='ad-empty'>暂无</p>";
+      html += "<h4 style='margin-top:16px'>本机申请记录（" + apps.length + "）</h4>";
+      html += apps.length ? apps.map(function (a) {
+        return "<div class='ad-rec'><strong>" + esc(a.mName || "") + "</strong> · " + esc(a.mGrade || "") + " · " + esc(a._time || "") + "</div>";
+      }).join("") : "<p class='ad-empty'>暂无</p>";
+      box.innerHTML = html;
+    }
+    var localApps = LS.get("applications", []);
+    if (window.XB_CLOUD && XB_CLOUD.isReady()) {
+      XB_CLOUD.fetchSubmissions().then(function (rows) { paint(rows || [], localApps); })
+        .catch(function () { paint([], localApps); });
+    } else {
+      paint([], localApps);
+    }
   }
 
-  /* ============================================================
-   * 模式与初始化
-   * ============================================================ */
+  /* ---------- 模式与初始化 ---------- */
   function updateModeLabel() {
-    var ov = overlay();
     var el = $("#adMode");
-    if (!el) return;
-    el.textContent = ov.useLocal ? "本地管理（编辑优先生效）" : "远端优先（拉取社团作品库，失败回退示例）";
+    if (el) {
+      el.textContent = ADMIN.cloud
+        ? "云端作品库（已登录，编辑全局共享）"
+        : (ADMIN.source === "cloud" ? "云端作品库（只读，未登录）" : "本机草稿模式（未登录，编辑仅存本机）");
+    }
+    var dot = $("#adDot");
+    if (dot) dot.className = "ad-dot" + (ADMIN.cloud ? " on" : ADMIN.source === "cloud" ? " warn" : "");
     var btn = $("#adModeToggle");
-    if (btn) btn.textContent = ov.useLocal ? "切换回远端优先" : "切换到本地管理";
+    if (btn) {
+      btn.textContent = ADMIN.cloud ? "退出登录" : "去登录";
+      btn.onclick = function () {
+        if (ADMIN.cloud) {
+          XB_CLOUD.signOut().then(function () {
+            ADMIN.cloud = false;
+            ADMIN.user = null;
+            updateModeLabel();
+            toast("已退出登录，回到本机草稿模式");
+          });
+        } else {
+          location.href = "login.html?next=admin.html";
+        }
+      };
+    }
   }
 
   function renderAll() {
@@ -376,65 +535,67 @@ window.XB_ADMIN = (function () {
   }
 
   function init() {
-    /* 登录门禁（演示登录） */
-    var user = LS.get("user", null);
-    if (!user) {
-      $("#adGate").style.display = "grid";
-      $("#adApp").style.display = "none";
-      return;
-    }
-    $("#adGate").style.display = "none";
-    $("#adApp").style.display = "block";
-    $("#adUserName").textContent = user.name || user.email || "管理员";
+    var local = LS.get("user", null);
+    var gate = $("#adGate");
+    var app = $("#adApp");
 
-    updateModeLabel();
-    renderAll();
+    loadData().then(function () {
+      if (ADMIN.cloud) {
+        gate.style.display = "none";
+        app.style.display = "block";
+        var u = ADMIN.user || {};
+        $("#adUserName").textContent = u.email || u.name || "社员";
+      } else if (local) {
+        gate.style.display = "none";
+        app.style.display = "block";
+        $("#adUserName").textContent = local.name || "本地草稿";
+      } else if (ADMIN.source === "cloud") {
+        /* 云端可读：展示只读视图，登录后即可编辑 */
+        gate.style.display = "none";
+        app.style.display = "block";
+        $("#adUserName").textContent = "访客（只读）";
+      } else {
+        gate.style.display = "grid";
+        app.style.display = "none";
+      }
+      renderAll();
+      updateModeLabel();
+      bindUI();
+    });
+  }
 
-    /* 标签页 */
+  function bindUI() {
     $$(".ad-tabs button").forEach(function (b) {
       b.addEventListener("click", function () {
         $$(".ad-tabs button").forEach(function (x) { x.classList.remove("on"); });
         b.classList.add("on");
         $$(".ad-panel").forEach(function (p) { p.classList.remove("on"); });
-        $("#tab-" + b.dataset.tab).classList.add("on");
+        var t = $("#tab-" + b.dataset.tab);
+        if (t) t.classList.add("on");
       });
     });
-
-    /* 作品编辑器 */
-    $("#weNew").addEventListener("click", function () { openWorkEditor(null); });
-    $("#weSave").addEventListener("click", saveWorkEditor);
-    $("#weCancel").addEventListener("click", function () { $("#workEditor").classList.remove("open"); });
-
-    /* 分区按钮 */
+    on("#weNew", "click", function () { openWorkEditor(null); });
+    on("#weSave", "click", saveWorkEditor);
+    on("#weCancel", "click", function () { $("#workEditor").classList.remove("open"); });
     [["ev", "保存活动"], ["mb", "保存社员"], ["jr", "保存社刊"]].forEach(function (pair) {
       on("#" + pair[0] + "Save", "click", function () { saveSection(pair[0]); });
       on("#" + pair[0] + "Add", "click", function () { addSectionItem(pair[0]); });
     });
-
-    /* 数据按钮 */
     on("#adExport", "click", exportJSON);
     on("#adImportBtn", "click", function () { $("#adImportFile").click(); });
     on("#adImportFile", "change", function () { if (this.files[0]) importJSON(this.files[0]); this.value = ""; });
     on("#adReset", "click", resetAll);
-    on("#adModeToggle", "click", function () {
-      var ov = overlay();
-      ov.useLocal = !ov.useLocal;
-      saveOverlay(ov);
-      updateModeLabel();
-      toast(ov.useLocal ? "已切换到本地管理模式" : "已切换回远端优先模式");
-    });
     on("#adClearInteractions", "click", function () {
       if (!confirm("清空本机的点赞/收藏/评论记录吗？")) return;
       LS.del("likes"); LS.del("bookmarks"); LS.del("comments");
       toast("互动数据已清空");
     });
     on("#adLogout", "click", function () {
+      if (window.XB_CLOUD) XB_CLOUD.signOut().catch(function () {});
       LS.del("user");
-      location.href = "login.html?next=admin.html";
+      location.href = "index.html";
     });
   }
-
-  function on(sel, ev, fn) { var el = $(sel); if (el) el.addEventListener(ev, fn); }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();

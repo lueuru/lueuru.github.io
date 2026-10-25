@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>登录 / 注册 - 新笔文学社</title>
-<meta name="description" content="新笔文学社演示登录页">
+<meta name="description" content="新笔文学社社员登录与注册">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#8b3a3a">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='8' fill='%238b3a3a'/%3E%3Ctext x='32' y='43' font-size='30' text-anchor='middle' fill='%23fff' font-family='serif'%3E新%3C/text%3E%3C/svg%3E">
 <link rel="stylesheet" href="assets/css/style.css">
@@ -15,86 +17,275 @@
   <symbol id="i-feather" viewBox="0 0 24 24"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5z"/><line x1="16" y1="8" x2="2" y2="22"/><line x1="17.5" y1="15" x2="9" y2="15"/></symbol>
 </svg>
 
-<div class="login-page">
+<header class="header" id="header">
+  <a href="index.html" class="logo">
+    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-feather"/></svg>
+    <span>新笔文学社</span>
+  </a>
+</header>
+
+<main class="login-page">
   <div class="login-card rv on">
     <a href="index.html" class="logo">
       <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-feather"/></svg>
       <span>新笔文学社</span>
     </a>
-    <p class="login-sub">用文字书写灵魂</p>
+    <p class="login-sub">用文字书写灵魂 · 社员账号</p>
 
     <div class="login-tabs">
-      <button type="button" class="on" id="tabLogin">登录</button>
-      <button type="button" id="tabReg">注册</button>
+      <button type="button" class="on" data-tab="pwd">密码登录</button>
+      <button type="button" data-tab="otp">验证码登录</button>
+      <button type="button" data-tab="reg">注册</button>
     </div>
 
-    <form id="loginForm" novalidate>
-      <div class="fg" id="nameField" style="display:none">
-        <label for="nick">昵称</label>
-        <input type="text" id="nick" placeholder="取个笔名吧">
-      </div>
-      <div class="fg">
-        <label for="email">邮箱</label>
-        <input type="email" id="email" placeholder="请输入邮箱" required>
-      </div>
-      <div class="fg">
-        <label for="pwd">密码</label>
-        <input type="password" id="pwd" placeholder="请输入密码" required>
-      </div>
-      <button type="submit" class="btn btn-d" style="width:100%" id="submitBtn">登 录</button>
+    <form id="pwdForm" class="tab-pane on" novalidate>
+      <div class="fg"><label for="pEmail">邮箱</label><input type="email" id="pEmail" placeholder="请输入注册邮箱" autocomplete="email"></div>
+      <div class="fg"><label for="pPwd">密码</label><input type="password" id="pPwd" placeholder="请输入密码" autocomplete="current-password"></div>
+      <button type="submit" class="btn btn-d" style="width:100%" id="pwdSubmit">登 录</button>
+      <button type="button" class="link-btn" id="forgotBtn" style="width:100%;margin-top:10px">忘记密码？</button>
     </form>
 
+    <form id="otpForm" class="tab-pane" novalidate>
+      <div class="fg"><label for="oEmail">邮箱</label>
+        <div class="code-row">
+          <input type="email" id="oEmail" placeholder="请输入注册邮箱" autocomplete="email">
+          <button type="button" class="btn btn-l sm" id="oSendBtn">获取验证码</button>
+        </div>
+      </div>
+      <div class="fg" id="oCodeWrap" style="display:none"><label for="oCode">邮箱验证码</label><input type="text" id="oCode" placeholder="请输入验证码" inputmode="numeric"></div>
+      <button type="submit" class="btn btn-d" style="width:100%" id="otpSubmit">登 录</button>
+    </form>
+
+    <form id="regForm" class="tab-pane" novalidate>
+      <div class="fg"><label for="rEmail">邮箱</label>
+        <div class="code-row">
+          <input type="email" id="rEmail" placeholder="用于接收验证码的邮箱" autocomplete="email">
+          <button type="button" class="btn btn-l sm" id="rSendBtn">获取验证码</button>
+        </div>
+      </div>
+      <div class="fg" id="rCodeWrap" style="display:none"><label for="rCode">邮箱验证码</label><input type="text" id="rCode" placeholder="请输入验证码" inputmode="numeric"></div>
+      <div class="fg" id="rPwdWrap" style="display:none"><label for="rPwd">设置密码</label><input type="password" id="rPwd" placeholder="至少 6 位" autocomplete="new-password"></div>
+      <button type="submit" class="btn btn-d" style="width:100%" id="regSubmit">注 册</button>
+    </form>
+
+    <form id="forgotForm" class="tab-pane" novalidate>
+      <div class="fg"><label for="fEmail">邮箱</label><input type="email" id="fEmail" placeholder="注册时使用的邮箱" autocomplete="email"></div>
+      <div class="fg" id="fCodeWrap" style="display:none"><label for="fCode">邮箱验证码</label><input type="text" id="fCode" placeholder="请输入验证码" inputmode="numeric"></div>
+      <div class="fg" id="fPwdWrap" style="display:none"><label for="fPwd">新密码</label><input type="password" id="fPwd" placeholder="至少 6 位" autocomplete="new-password"></div>
+      <button type="button" class="btn btn-l sm" id="fSendBtn" style="width:100%">获取验证码</button>
+      <button type="submit" class="btn btn-d" style="width:100%;margin-top:10px">重置密码</button>
+    </form>
+
+    <p class="login-msg" id="loginMsg" role="alert"></p>
+
     <div class="login-note">
-      基础版本说明：本页为<b>本地演示登录</b>，不连接真实后台。提交后仅在本机浏览器保存一个演示身份，用于体验作品点赞、评论等功能；清除浏览器数据后即失效。
+      账号保存在社团云端作品库中：登录后可在 <b>内容管理</b> 里编辑作品、活动、社员与社刊，投稿与评论会同步到云端。
     </div>
+    <button type="button" class="link-btn" id="draftBtn" style="width:100%">以本地草稿模式继续（不写入云端）</button>
     <a class="login-back" href="index.html">← 返回首页</a>
   </div>
-</div>
+</main>
 
+<footer>
+  <div class="si">
+    <h3>新笔文学社</h3>
+    <p class="tl">以文会友 · 以笔写心 · 以书传情</p>
+    <p class="copy">© 2025-2026 新笔文学社 版权所有 | 基础版本 v0.5 · 托管云后端</p>
+  </div>
+</footer>
+
+<div class="toast" id="toastEl" role="status" aria-live="polite"></div>
+
+<script src="assets/js/data.js"></script>
+<script src="assets/js/cloud.js"></script>
 <script>
 (function () {
   "use strict";
-  var mode = "login";
-  /* 登录后回跳：仅允许同目录下的 html 页面，防开放重定向 */
   var next = new URLSearchParams(location.search).get("next") || "";
   if (!/^[A-Za-z0-9_-]+\.html(\?[^\s]*)?$/.test(next)) next = "index.html";
-  var tabLogin = document.getElementById("tabLogin");
-  var tabReg = document.getElementById("tabReg");
-  var nameField = document.getElementById("nameField");
-  var submitBtn = document.getElementById("submitBtn");
-  var toast = document.createElement("div");
-  toast.className = "toast";
-  document.body.appendChild(toast);
-  function showToast(m) {
-    toast.textContent = m;
-    toast.className = "toast toast-ok show";
-    setTimeout(function () { toast.classList.remove("show"); }, 2000);
-  }
-  function setMode(m) {
-    mode = m;
-    tabLogin.classList.toggle("on", m === "login");
-    tabReg.classList.toggle("on", m === "reg");
-    nameField.style.display = m === "reg" ? "block" : "none";
-    submitBtn.textContent = m === "reg" ? "注 册" : "登 录";
-  }
-  tabLogin.addEventListener("click", function () { setMode("login"); });
-  tabReg.addEventListener("click", function () { setMode("reg"); });
 
-  document.getElementById("loginForm").addEventListener("submit", function (e) {
-    e.preventDefault();
-    var email = document.getElementById("email").value.trim();
-    var nick = document.getElementById("nick").value.trim();
-    if (!email || !document.getElementById("pwd").value) {
-      showToast("请填写邮箱和密码");
-      return;
-    }
-    var name = mode === "reg" && nick ? nick : email.split("@")[0];
-    try {
-      localStorage.setItem("xb_user", JSON.stringify({ name: name, email: email }));
-    } catch (err) {}
-    showToast(mode === "reg" ? "注册成功，正在进入..." : "登录成功，正在进入...");
-    setTimeout(function () { window.location.href = next; }, 700);
+  var pending = { otp: null, forgot: null };
+  var msg = document.getElementById("loginMsg");
+  var tabs = document.querySelectorAll(".login-tabs button");
+  var panes = document.querySelectorAll(".tab-pane");
+
+  function say(text, isErr) {
+    msg.textContent = text || "";
+    msg.className = "login-msg" + (isErr ? " err" : "");
+  }
+  function showPane(name) {
+    tabs.forEach(function (b) { b.classList.toggle("on", b.dataset.tab === name); });
+    panes.forEach(function (p) { p.classList.remove("on"); });
+    var map = { pwd: "pwdForm", otp: "otpForm", reg: "regForm", forgot: "forgotForm" };
+    var target = document.querySelector("#" + map[name]);
+    if (target) target.classList.add("on");
+    say("");
+  }
+  tabs.forEach(function (b) {
+    b.addEventListener("click", function () { showPane(b.dataset.tab); });
   });
+  document.getElementById("forgotBtn").addEventListener("click", function () { showPane("forgot"); });
+
+  function busy(btn, on) {
+    if (!btn) return;
+    if (!btn.dataset.label) btn.dataset.label = btn.textContent;
+    btn.disabled = on;
+    btn.textContent = on ? "处理中…" : btn.dataset.label;
+  }
+  function ready() {
+    if (!window.XB_CLOUD) { say("云端组件未加载，请刷新页面", true); return false; }
+    return true;
+  }
+
+  /* 密码登录 */
+  document.getElementById("pwdForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var email = document.getElementById("pEmail").value.trim();
+    var pwd = document.getElementById("pPwd").value;
+    if (!email || !pwd) { say("请填写邮箱和密码", true); return; }
+    if (!ready()) return;
+    var btn = document.getElementById("pwdSubmit");
+    busy(btn, true);
+    XB_CLOUD.signIn(email, pwd).then(function (r) {
+      busy(btn, false);
+      if (r && r.error) { say("邮箱或密码不正确", true); return; }
+      say("登录成功，正在进入…");
+      setTimeout(function () { location.href = next; }, 600);
+    }).catch(function () { busy(btn, false); say("登录失败：网络异常或云端不可达", true); });
+  });
+
+  /* 验证码登录 */
+  document.getElementById("oSendBtn").addEventListener("click", function () {
+    var email = document.getElementById("oEmail").value.trim();
+    if (!email) { say("请先填写邮箱", true); return; }
+    if (!ready()) return;
+    var btn = document.getElementById("oSendBtn");
+    busy(btn, true);
+    XB_CLOUD.sendOtp(email).then(function (r) {
+      busy(btn, false);
+      if (r && r.error) { say("验证码发送失败，请稍后再试", true); return; }
+      pending.otp = { email: email, verificationId: r.data.verificationId, isExistingUser: r.data.isExistingUser };
+      document.getElementById("oCodeWrap").style.display = "block";
+      say("验证码已发送，请查收邮件");
+    }).catch(function () { busy(btn, false); say("发送失败：网络异常", true); });
+  });
+
+  document.getElementById("otpForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!ready()) return;
+    var code = document.getElementById("oCode").value.trim();
+    if (!pending.otp) { say("请先获取验证码", true); return; }
+    if (!code) { say("请输入验证码", true); return; }
+    var btn = document.getElementById("otpSubmit");
+    busy(btn, true);
+    XB_CLOUD.verifyOtp({
+      email: pending.otp.email,
+      verificationId: pending.otp.verificationId,
+      isExistingUser: pending.otp.isExistingUser,
+      token: code
+    }).then(function (r) {
+      busy(btn, false);
+      if (r && r.error) { say("验证码不正确或已过期", true); return; }
+      pending.otp = null;
+      say("登录成功，正在进入…");
+      setTimeout(function () { location.href = next; }, 600);
+    }).catch(function () { busy(btn, false); say("登录失败：网络异常", true); });
+  });
+
+  /* 注册 */
+  document.getElementById("rSendBtn").addEventListener("click", function () {
+    var email = document.getElementById("rEmail").value.trim();
+    if (!email) { say("请先填写邮箱", true); return; }
+    if (!ready()) return;
+    var btn = document.getElementById("rSendBtn");
+    busy(btn, true);
+    XB_CLOUD.sendOtp(email).then(function (r) {
+      busy(btn, false);
+      if (r && r.error) { say("验证码发送失败，请稍后再试", true); return; }
+      pending.otp = { email: email, verificationId: r.data.verificationId, isExistingUser: r.data.isExistingUser };
+      document.getElementById("rCodeWrap").style.display = "block";
+      document.getElementById("rPwdWrap").style.display = "block";
+      say("验证码已发送，请查收邮件并设置密码");
+    }).catch(function () { busy(btn, false); say("发送失败：网络异常", true); });
+  });
+
+  document.getElementById("regForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!ready()) return;
+    var code = document.getElementById("rCode").value.trim();
+    var pwd = document.getElementById("rPwd").value;
+    if (!pending.otp) { say("请先获取验证码", true); return; }
+    if (!code) { say("请输入验证码", true); return; }
+    if (!pwd || pwd.length < 6) { say("密码至少 6 位", true); return; }
+    if (pending.otp.isExistingUser) { showPane("pwd"); say("该邮箱已完成注册，请直接登录", true); return; }
+    var btn = document.getElementById("regSubmit");
+    busy(btn, true);
+    XB_CLOUD.verifyOtp({
+      email: pending.otp.email,
+      verificationId: pending.otp.verificationId,
+      isExistingUser: false,
+      token: code,
+      password: pwd
+    }).then(function (r) {
+      busy(btn, false);
+      if (r && r.error) { say("注册失败：" + (r.error.message || "请检查验证码"), true); return; }
+      pending.otp = null;
+      say("注册成功，正在进入…");
+      setTimeout(function () { location.href = next; }, 700);
+    }).catch(function () { busy(btn, false); say("注册失败：网络异常", true); });
+  });
+
+  /* 找回密码 */
+  document.getElementById("fSendBtn").addEventListener("click", function () {
+    var email = document.getElementById("fEmail").value.trim();
+    if (!email) { say("请先填写邮箱", true); return; }
+    if (!ready()) return;
+    var btn = document.getElementById("fSendBtn");
+    busy(btn, true);
+    XB_CLOUD.sendOtp(email).then(function (r) {
+      busy(btn, false);
+      if (r && r.error) { say("发送失败，请稍后再试", true); return; }
+      pending.forgot = { email: email, verificationId: r.data.verificationId, isExistingUser: r.data.isExistingUser };
+      document.getElementById("fCodeWrap").style.display = "block";
+      document.getElementById("fPwdWrap").style.display = "block";
+      say("验证码已发送，请查收邮件");
+    }).catch(function () { busy(btn, false); say("发送失败：网络异常", true); });
+  });
+
+  document.getElementById("forgotForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+    if (!ready()) return;
+    var code = document.getElementById("fCode").value.trim();
+    var pwd = document.getElementById("fPwd").value;
+    if (!pending.forgot) { say("请先获取验证码", true); return; }
+    if (!code || !pwd) { say("请填写验证码和新密码", true); return; }
+    if (pwd.length < 6) { say("密码至少 6 位", true); return; }
+    say("正在重置…");
+    /* 重置密码需要 updateUser 句柄：重新发起一次验证码流程并直接带 updateUser */
+    XB_CLOUD.sendOtp(pending.forgot.email).then(function (r) {
+      if (r && r.error || !r || !r.data || !r.data.updateUser) { say("重置失败，请重试", true); return; }
+      r.data.updateUser({ nonce: code, password: pwd }).then(function (done) {
+        if (done && done.error) { say("重置失败：验证码不正确", true); return; }
+        say("密码已重置，请用新密码登录");
+        setTimeout(function () { showPane("pwd"); }, 1000);
+      }).catch(function () { say("重置失败：网络异常", true); });
+    }).catch(function () { say("重置失败：网络异常", true); });
+  });
+
+  /* 本地草稿模式（明确不写云端） */
+  document.getElementById("draftBtn").addEventListener("click", function () {
+    try {
+      localStorage.setItem("xb_user", JSON.stringify({ name: "本地草稿", email: "", draft: true }));
+    } catch (err) {}
+    location.href = next === "index.html" ? "admin.html" : next;
+  });
+
+  /* 已有云端会话则直接进入 */
+  if (window.XB_CLOUD) {
+    XB_CLOUD.load().then(function () { return XB_CLOUD.session(); }).then(function (s) {
+      if (s && s.user) location.href = next;
+    }).catch(function () {});
+  }
 })();
 </script>
 <script>

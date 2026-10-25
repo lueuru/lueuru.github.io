@@ -1388,3 +1388,36 @@ body.dark .ad-tabs button.on { color: var(--gold); border-bottom-color: var(--go
   .ad-head { flex-direction: column; }
   .ad-tabs button { padding: 9px 12px; font-size: 0.88rem; }
 }
+
+/* ============================================================
+ * v0.5：登录页（云认证）与后台云状态
+ * ============================================================ */
+.tab-pane { display: none; }
+.tab-pane.on { display: block; }
+.code-row { display: flex; gap: 8px; align-items: flex-end; }
+.code-row input { flex: 1; min-width: 0; }
+.code-row .btn { flex: none; white-space: nowrap; }
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--ink-3);
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: underline;
+  padding: 4px;
+}
+.link-btn:hover { color: var(--red); }
+.login-msg { font-size: 0.85rem; min-height: 20px; margin: 10px 0 0; color: var(--green); }
+.login-msg.err { color: var(--red); }
+.ad-cloud {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--ink-3);
+  margin-top: 10px;
+}
+.ad-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-faint); flex: none; }
+.ad-dot.on { background: var(--green); box-shadow: 0 0 0 3px rgba(91, 122, 106, 0.18); }
+.ad-dot.warn { background: var(--gold); }

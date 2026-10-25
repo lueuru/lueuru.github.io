@@ -56,7 +56,9 @@
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
 
-  function curUser() { return LS.get("user", null); }
+  /* 演示登录状态 / 云端会话（云端优先） */
+  var CLOUD_USER = null;
+  function curUser() { return CLOUD_USER || LS.get("user", null); }
   function likes() { return LS.get("likes", []); }
   function bookmarks() { return LS.get("bookmarks", []); }
   function commentsOf(id) { return LS.get("comments", {})[String(id)] || []; }
@@ -125,29 +127,93 @@
   function setSourceBadge() {
     var b = $("#srcBadge");
     if (!b) return;
-    if (DATA.source === "remote") {
-      b.textContent = "数据来源：社团作品库（实时）";
+    if (DATA.source === "cloud") {
+      b.textContent = "数据来源：社团云端作品库（实时）";
+      b.className = "src-badge src-on";
+    } else if (DATA.source === "remote") {
+      b.textContent = "数据来源：旧站 Supabase（实时）";
       b.className = "src-badge src-on";
     } else if (DATA.source === "local-managed") {
       b.textContent = "数据来源：本地管理（后台编辑）";
       b.className = "src-badge src-managed";
     } else {
-      b.textContent = "数据来源：本地示例数据";
+      b.textContent = "数据来源：本地示例数据（云端未连通）";
       b.className = "src-badge";
     }
   }
 
+  /* ============================================================
+   * 云端数据加载（WorkBuddy Cloud）
+   * ============================================================ */
+  function applyCloudData(cloud) {
+    var corpus = {};
+    D.works.forEach(function (w) { corpus[w.title] = w; });
+    if (cloud.works && cloud.works.length) {
+      DATA.works = cloud.works.map(function (row) {
+        var local = corpus[row.slug] || corpus[row.title];
+        var content = (row.content && row.content.length) ? row.content : (local ? local.content : null);
+        return {
+          id: row.id,
+          title: row.title,
+          author: row.author,
+          grade: row.grade || "",
+          class_name: row.class_name || "",
+          category: row.category || "essay",
+          excerpt: row.excerpt || (local ? local.excerpt : ""),
+          content: content && content.length ? content : ["（正文待补充）"],
+          likes: row.likes || 0,
+          bookmarks: row.bookmarks || 0,
+          slug: row.slug || row.title,
+          cloud: true
+        };
+      });
+    }
+    if (cloud.events && cloud.events.length) {
+      D.events = cloud.events.map(function (r) {
+        var b = r.body || {};
+        return { title: r.title || b.title || "活动", days: b.days || 14, time: b.time || "18:00-20:00", loc: b.loc || "待定", desc: b.desc || "" };
+      });
+    }
+    if (cloud.members && cloud.members.length) {
+      D.members = cloud.members.map(function (r) {
+        var b = r.body || {};
+        return { name: r.title || b.name || "社员", role: b.role || "社员", quote: b.quote || "", bio: b.bio || "", hue: b.hue || "#8b3a3a" };
+      });
+    }
+    if (cloud.issues && cloud.issues.length) {
+      D.journal.issues = cloud.issues.map(function (r) { return r.body || {}; });
+    }
+  }
+
+  function loadCloudData() {
+    if (!window.XB_CLOUD) return Promise.resolve(null);
+    return XB_CLOUD.load().then(function (ok) {
+      if (!ok) return null;
+      return Promise.all([
+        XB_CLOUD.fetchWorks(),
+        XB_CLOUD.fetchContent("event"),
+        XB_CLOUD.fetchContent("member"),
+        XB_CLOUD.fetchContent("issue")
+      ]).then(function (res) {
+        var cloud = { works: res[0], events: res[1], members: res[2], issues: res[3] };
+        if (!cloud.works && !cloud.events && !cloud.members && !cloud.issues) return null;
+        applyCloudData(cloud);
+        DATA.source = "cloud";
+        return cloud;
+      });
+    }).catch(function () { return null; });
+  }
+
+  /* 旧站 Supabase（项目已下线，默认关闭；如恢复可在 config.js 打开） */
   function loadRemoteWorks() {
     if (DATA.remoteTried) return Promise.resolve(DATA.source === "remote");
     DATA.remoteTried = true;
-    if (!CFG.enableRemote || !CFG.supabaseUrl || !CFG.anonKey) {
-      setSourceBadge();
-      return Promise.resolve(false);
-    }
+    var legacy = (window.XB_CONFIG || {}).legacySupabase || {};
+    if (!legacy.enableRemote || !legacy.supabaseUrl || !legacy.anonKey) return Promise.resolve(false);
     var ctrl = "AbortController" in window ? new AbortController() : null;
-    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, CFG.timeoutMs || 7000);
-    var url = CFG.supabaseUrl + "/rest/v1/works?select=id,title,author,grade,class_name,category,excerpt,image_url,likes,bookmarks,created_at,content&order=created_at.desc&limit=100";
-    return fetch(url, { headers: { apikey: CFG.anonKey }, signal: ctrl ? ctrl.signal : undefined })
+    var timer = setTimeout(function () { if (ctrl) ctrl.abort(); }, legacy.timeoutMs || 7000);
+    var url = legacy.supabaseUrl + "/rest/v1/works?select=id,title,author,grade,class_name,category,excerpt,likes,bookmarks,created_at,content&order=created_at.desc&limit=100";
+    return fetch(url, { headers: { apikey: legacy.anonKey }, signal: ctrl ? ctrl.signal : undefined })
       .then(function (r) {
         clearTimeout(timer);
         if (!r.ok) throw new Error("HTTP " + r.status);
@@ -158,12 +224,10 @@
           DATA.works = list.map(normalizeRemoteWork);
           DATA.source = "remote";
         }
-        setSourceBadge();
         return DATA.source === "remote";
       })
       .catch(function () {
         clearTimeout(timer);
-        setSourceBadge();
         return false;
       });
   }
@@ -205,7 +269,7 @@
     return '<div class="wc rv d' + ((i % 4) + 1) + '" data-id="' + w.id + '">' +
       '<div class="wci">' + coverArt(w) + '<span class="wcbadge">' + esc(D.categories[w.category] || "") + "</span></div>" +
       '<div class="wcb">' +
-      "<h3>" + esc(w.title) + "</h3>" +
+      '<h3 class="bc-title">' + esc(w.title) + "</h3>" +
       '<div class="wcm">' + esc(w.grade) + (w.class_name ? esc(w.class_name) + "班 · " : " · ") + esc(w.author) + "</div>" +
       '<p class="wce">' + esc(w.excerpt) + "</p>" +
       '<div class="wcs">' + metaLine +
@@ -270,6 +334,9 @@
     LS.set("likes", l);
     updateWorkUI(id);
     toast(i > -1 ? "已取消点赞" : "点赞成功");
+    if (window.XB_CLOUD && XB_CLOUD.isReady() && CLOUD_USER) {
+      XB_CLOUD.markInteraction(id, "like", i === -1).catch(function () {});
+    }
   }
 
   function toggleBookmark(id) {
@@ -279,6 +346,9 @@
     LS.set("bookmarks", b);
     updateWorkUI(id);
     toast(i > -1 ? "已取消收藏" : "已加入收藏");
+    if (window.XB_CLOUD && XB_CLOUD.isReady() && CLOUD_USER) {
+      XB_CLOUD.markInteraction(id, "bookmark", i === -1).catch(function () {});
+    }
   }
 
   /* ============================================================
@@ -311,17 +381,13 @@
   }
 
   /* ============================================================
-   * 评论（localStorage 演示）
+   * 评论（本地 + 云端合并）
    * ============================================================ */
-  function renderComments(id) {
-    var section = $("#comments-section");
-    if (!section) return;
-    var list = commentsOf(id);
-    var u = curUser();
+  function commentsHtml(list, u) {
     var html = "<h4>评论 (" + list.length + ")</h4>";
     if (list.length) {
       html += list.map(function (c) {
-        return '<div class="comment-item"><strong>' + esc(c.name) + '</strong><span class="cmt-time">' + esc(c.time) + '</span><div class="cmt-content">' + esc(c.content) + "</div></div>";
+        return '<div class="comment-item"><strong>' + esc(c.name) + '</strong><span class="cmt-time">' + esc(c.time) + (c.cloud ? " · 云端" : "") + '</span><div class="cmt-content">' + esc(c.content) + "</div></div>";
       }).join("");
     } else {
       html += '<p class="cmt-empty">还没有评论，来发表第一条吧。</p>';
@@ -329,26 +395,80 @@
     if (u) {
       html += '<div class="cmt-input-row"><input id="cmtInput" placeholder="写下你的评论..." maxlength="200"><button type="button" class="btn btn-d" id="cmtPostBtn">发表</button></div>';
     } else {
-      html += '<p class="cmt-login-hint">演示登录后即可评论 → <a href="' + loginUrl() + '">去登录</a></p>';
+      html += '<p class="cmt-login-hint">登录后即可评论 → <a href="' + loginUrl() + '">去登录</a></p>';
     }
-    section.innerHTML = html;
-    on("#cmtPostBtn", "click", postComment);
-    on("#cmtInput", "keydown", function (e) { if (e.key === "Enter") postComment(); });
+    return html;
   }
 
-  function postComment() {
+  function bindCommentUI(id) {
+    on("#cmtPostBtn", "click", function () { postComment(id); });
+    on("#cmtInput", "keydown", function (e) { if (e.key === "Enter") postComment(id); });
+  }
+
+  function renderComments(id) {
+    var section = $("#comments-section");
+    if (!section) return;
+    var u = curUser();
+    section.innerHTML = commentsHtml(commentsOf(id), u);
+    bindCommentUI(id);
+    /* 云端评论合并补充 */
+    if (window.XB_CLOUD && XB_CLOUD.isReady()) {
+      XB_CLOUD.fetchComments(id).then(function (rows) {
+        if (!rows || !rows.length) return;
+        var list = commentsOf(id).slice();
+        var seen = {};
+        list.forEach(function (c) { seen[c.content + "|" + c.time] = true; });
+        var added = 0;
+        rows.forEach(function (r) {
+          var k = (r.content || "") + "|" + (r.created_at || "");
+          if (seen[k]) return;
+          seen[k] = true;
+          list.push({ name: r.author_name || "社员", content: r.content || "", time: fmtCloudTime(r.created_at), cloud: true });
+          added++;
+        });
+        if (!added) return;
+        var all = LS.get("comments", {});
+        all[String(id)] = list;
+        LS.set("comments", all);
+        section.innerHTML = commentsHtml(list, curUser());
+        bindCommentUI(id);
+      }).catch(function () {});
+    }
+  }
+
+  function fmtCloudTime(iso) {
+    if (!iso) return "";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return String(iso);
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") + " " +
+      String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
+  }
+
+  function postComment(workId) {
     var inp = $("#cmtInput");
     if (!inp || !inp.value.trim()) { toast("请先输入评论内容", "err"); return; }
     var u = curUser();
     if (!u) { toast("请先登录", "err"); return; }
-    if (!curWork) { toast("评论失败：未选择作品", "err"); return; }
+    var wid = workId || (curWork ? curWork.id : null);
+    if (!wid) { toast("评论失败：未选择作品", "err"); return; }
+    var text = inp.value.trim();
     var all = LS.get("comments", {});
-    var key = String(curWork.id);
+    var key = String(wid);
     if (!all[key]) all[key] = [];
-    all[key].unshift({ name: u.name, content: inp.value.trim(), time: new Date().toLocaleString("zh-CN", { hour12: false }) });
+    all[key].unshift({ name: u.name, content: text, time: new Date().toLocaleString("zh-CN", { hour12: false }) });
     LS.set("comments", all);
-    renderComments(curWork.id);
-    toast("评论已发表");
+    renderComments(wid);
+    /* 同步云端（已登录时） */
+    if (window.XB_CLOUD && XB_CLOUD.isReady() && u.cloud) {
+      XB_CLOUD.markInteraction(wid, "comment", true, { content: text, author_name: u.name })
+        .then(function (r) {
+          if (r && r.error) toast("评论已保存在本机，云端同步失败", "err");
+          else toast("评论已发表并同步到云端");
+        })
+        .catch(function () { toast("评论已保存在本机", "err"); });
+    } else {
+      toast("评论已发表（登录后可同步到云端）");
+    }
   }
 
   /* ============================================================
@@ -517,7 +637,7 @@
   /* ============================================================
    * 表单（本地演示提交）
    * ============================================================ */
-  function bindForm(formSel, okSel, key, okMsg, btnLabel) {
+  function bindForm(formSel, okSel, key, okMsg, btnLabel, toCloud) {
     var form = $(formSel);
     if (!form) return;
     var btn = form.querySelector("button[type=submit]");
@@ -539,8 +659,37 @@
         form.reset();
         if (btn) { btn.disabled = false; btn.textContent = btnLabel; }
         toast(okMsg);
+        /* 同步到社团云端作品库 */
+        if (toCloud && window.XB_CLOUD && XB_CLOUD.isReady()) {
+          var rec = toCloudRecord(key, data);
+          XB_CLOUD.submit(rec).then(function (r) {
+            if (r && r.error) toast("云端提交失败，记录已存在本机", "err");
+            else toast("已提交到社团云端作品库");
+          }).catch(function () { toast("云端提交失败，记录已存在本机", "err"); });
+        }
       }, 350);
     });
+  }
+
+  function toCloudRecord(key, d) {
+    if (key === "submissions") {
+      return {
+        title: d.sTitle || "无题",
+        author: d.sName || "匿名社员",
+        grade: d.sGrade || "",
+        category: d.sType || "prose",
+        content: d.sContent || "",
+        contact: [d.sEmail || "", d.sPhone || ""].filter(Boolean).join(" / ")
+      };
+    }
+    return {
+      title: "加入申请 · " + (d.mName || "社员"),
+      author: d.mName || "社员",
+      grade: d.mGrade || "",
+      category: "application",
+      content: [d.mInterest ? "兴趣：" + d.mInterest : "", d.mMsg || ""].filter(Boolean).join("\n"),
+      contact: [d.mEmail || "", d.mPhone || ""].filter(Boolean).join(" / ")
+    };
   }
 
   /* ============================================================
@@ -958,6 +1107,19 @@
     bindModals();
     observeReveals();
 
+    /* 云端会话检查（登录态） */
+    if (window.XB_CLOUD) {
+      XB_CLOUD.load()
+        .then(function () { return XB_CLOUD.session(); })
+        .then(function (s) {
+          if (s && s.user) {
+            CLOUD_USER = { name: s.user.email || s.user.name || "社员", email: s.user.email || "", cloud: true };
+            renderUserUI();
+          }
+        })
+        .catch(function () {});
+    }
+
     if (page === "index") {
       renderTexts();
       renderEvents();
@@ -965,18 +1127,33 @@
       renderPortals();
       bindSearch();
       bindWorksEvents();
-      bindForm("#subForm", "#subOk", "submissions", "投稿已提交，我们将尽快审核（本地演示）", "提交投稿");
-      bindForm("#memForm", "#memOk", "applications", "申请已提交，我们将尽快与您联系（本地演示）", "提交申请");
+      bindForm("#subForm", "#subOk", "submissions", "投稿已提交，我们将尽快审核", "提交投稿", true);
+      bindForm("#memForm", "#memOk", "applications", "申请已提交，我们将尽快与您联系", "提交申请", true);
       if (DATA.source === "local-managed") {
         setSourceBadge();
         renderWorks(true);
       } else {
         var badge = $("#srcBadge");
-        if (badge) { badge.textContent = "正在连接社团作品库…"; badge.className = "src-badge src-loading"; }
+        if (badge) { badge.textContent = "正在连接社团云端作品库…"; badge.className = "src-badge src-loading"; }
         showSkeleton();
-        loadRemoteWorks().then(function (remote) {
-          renderWorks(true);
-          if (remote) toast("已加载社团作品库真实数据");
+        loadCloudData().then(function (cloud) {
+          if (cloud) {
+            renderWorks(true);
+            renderEvents();
+            renderMembers();
+            setSourceBadge();
+            toast("已连接社团云端作品库");
+            return;
+          }
+          /* 云端不可达 → 尝试旧站 Supabase → 都没有则用本地示例 */
+          loadRemoteWorks().then(function (remote) {
+            renderWorks(true);
+            setSourceBadge();
+            if (!remote) {
+              var b = $("#srcBadge");
+              if (b) b.textContent = "数据来源：本地示例数据（云端未连通）";
+            }
+          });
         });
       }
     }
