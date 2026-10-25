@@ -1,0 +1,30 @@
+name: 探针 · 社团 Supabase 存活检测
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '30 7 * * 1'
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📡 DNS 解析检测
+        run: |
+          echo "--- getent hosts ---"
+          getent hosts aybnmewinjckmftvctvx.supabase.co || echo "❌ DNS 解析失败（项目可能已暂停/删除）"
+          echo "--- curl 状态码（带 apikey）---"
+          code=$(curl -s -o /tmp/body.json -w "%{http_code}" -m 20 \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5Ym5tZXdpbmpja21mdHZjdHZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3NDE3NTIsImV4cCI6MjA5ODMxNzc1Mn0.BtEGJgZZbMCVvkRkmgeSw8mrTcf6xIiLZrL9Xm7mdnE" \
+            "https://aybnmewinjckmftvctvx.supabase.co/rest/v1/works?select=id,title&limit=3" || echo "000")
+          echo "HTTP: $code"
+          echo "--- 响应体（前 600 字节）---"
+          head -c 600 /tmp/body.json 2>/dev/null || echo "(无响应体)"
+          echo
+      - name: 🔐 Auth 端点检测
+        run: |
+          code=$(curl -s -o /tmp/auth.json -w "%{http_code}" -m 20 -X POST \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5Ym5tZXdpbmpja21mdHZjdHZ4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI3NDE3NTIsImV4cCI6MjA5ODMxNzc1Mn0.BtEGJgZZbMCVvkRkmgeSw8mrTcf6xIiLZrL9Xm7mdnE" \
+            -H "Content-Type: application/json" \
+            "https://aybnmewinjckmftvctvx.supabase.co/auth/v1/health" || echo "000")
+          echo "auth HTTP: $code"; head -c 300 /tmp/auth.json 2>/dev/null; echo
