@@ -23,31 +23,47 @@ window.XB_CLOUD = (function () {
         return resolve(false);
       }
       if (window.WorkBuddyCloud) return resolve(true);
-      var s = document.createElement("script");
-      s.src = "https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js";
-      s.async = true;
-      var done = false;
-      var timer = setTimeout(function () {
-        if (done) return;
-        done = true;
-        state.reason = "SDK 加载超时";
-        resolve(false);
-      }, CFG().cloudTimeoutMs || 8000);
-      s.onload = function () {
-        if (done) return;
-        done = true;
-        clearTimeout(timer);
-        state.reason = window.WorkBuddyCloud ? "" : "SDK 未就绪";
-        resolve(!!window.WorkBuddyCloud);
-      };
-      s.onerror = function () {
-        if (done) return;
-        done = true;
-        clearTimeout(timer);
-        state.reason = "SDK 加载失败（离线或 CDN 不可达）";
-        resolve(false);
-      };
-      document.head.appendChild(s);
+      /* 本地自托管优先（无 CDN 依赖），CDN 作为兜底 */
+      var sources = [
+        "assets/vendor/workbuddy-cloud.js",
+        "https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"
+      ];
+      var idx = 0;
+      function tryLoad() {
+        if (idx >= sources.length) {
+          state.reason = "SDK 加载失败（本地与 CDN 均不可用）";
+          return resolve(false);
+        }
+        var url = sources[idx++];
+        var s = document.createElement("script");
+        s.src = url;
+        s.async = true;
+        var done = false;
+        var timer = setTimeout(function () {
+          if (done) return;
+          done = true;
+          tryLoad();
+        }, CFG().cloudTimeoutMs || 8000);
+        s.onload = function () {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          if (window.WorkBuddyCloud) {
+            state.reason = "";
+            resolve(true);
+          } else {
+            tryLoad();
+          }
+        };
+        s.onerror = function () {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          tryLoad();
+        };
+        document.head.appendChild(s);
+      }
+      tryLoad();
     });
     return sdkPromise;
   }

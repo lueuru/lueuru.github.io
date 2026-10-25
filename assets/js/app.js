@@ -1463,6 +1463,132 @@
     loadCloudData().then(function () { paint(); });
   }
 
+
+  /* ============================================================
+   * v0.8 深度内容：编辑推荐 / 数据条 / 写作课 / 书单
+   * ============================================================ */
+  var PICK_NOTES = [
+    "这一篇的细节是「看见」过的，不是想出来的。",
+    "读完会想给家里打个电话的那种文章。",
+    "短，但每一句都踩在实处。",
+    "作者克制得住，所以读者放不下。",
+    "推荐给所有说「我不会写」的同学看看。"
+  ];
+
+  function renderFeatured() {
+    var box = $("#featureBlock");
+    if (!box || !DATA.works.length) return;
+    var seed = Math.floor(Date.now() / 86400000);
+    var w = DATA.works[seed % DATA.works.length];
+    if (!w) return;
+    var grade = (w.grade || "") + (w.class_name ? w.class_name + "班" : "");
+    box.innerHTML =
+      '<div class="feature-art"><div class="wci">' + coverArt(w) + "</div></div>" +
+      '<div class="feature-body">' +
+      '<span class="feature-tag">编辑推荐 · EDITOR\u2019S PICK</span>' +
+      "<h3>" + esc(w.title) + "</h3>" +
+      '<div class="feature-meta">' + esc(w.author) + (grade ? " · " + esc(grade) : "") + " · " + esc(D.categories[w.category] || "") + "</div>" +
+      '<p class="feature-ex">' + esc(w.excerpt) + "</p>" +
+      '<p class="feature-note">编辑部：' + esc(PICK_NOTES[seed % PICK_NOTES.length]) + "</p>" +
+      '<div class="feature-ops"><a class="btn btn-d" href="work.html?id=' + w.id + '">阅读全文</a>' +
+      '<a class="btn btn-l" href="authors.html?name=' + encodeURIComponent(w.author) + '">作者主页</a></div>' +
+      "</div>";
+    observeReveals();
+  }
+
+  function renderBars() {
+    var box = $("#barsBox");
+    if (!box) return;
+    var counts = {};
+    DATA.works.forEach(function (w) { counts[w.category] = (counts[w.category] || 0) + 1; });
+    var cats = ["prose", "poetry", "fiction", "essay"];
+    var max = 1;
+    cats.forEach(function (c) { if ((counts[c] || 0) > max) max = counts[c]; });
+    box.innerHTML = cats.map(function (c) {
+      var n = counts[c] || 0;
+      return '<div class="bar-row"><span>' + esc(D.categories[c]) + "</span>" +
+        '<span class="bar-track"><i class="bar-fill" style="width:' + Math.round((n / max) * 100) + '%"></i></span>' +
+        '<span class="bar-num">' + n + "</span></div>";
+    }).join("");
+  }
+
+  function initCraftPage() {
+    var box = $("#craftLessons");
+    if (!box) return;
+    box.innerHTML = (D.site.craft || []).map(function (l) {
+      return '<div class="lesson"><div class="lesson-no">' + esc(l.no) + " · LESSON</div><h3>" + esc(l.title) + "</h3>" +
+        l.body.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("") +
+        '<div class="demo"><div class="demo-box"><b>改前</b>' + esc(l.demo.before) + '</div>' +
+        '<div class="demo-box after"><b>改后</b>' + esc(l.demo.after) + "</div></div>" +
+        '<div class="tip">' + esc(l.tip) + "</div></div>";
+    }).join("");
+
+    var r = D.site.revision;
+    if (r) {
+      $("#revTitle").textContent = r.title;
+      $("#revBefore").innerHTML = "<h4>初稿 / BEFORE</h4>" + r.before.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("");
+      $("#revAfter").innerHTML = "<h4>见刊稿 / AFTER</h4>" + r.after.map(function (t) { return "<p>" + esc(t) + "</p>"; }).join("");
+      $("#revNotes").innerHTML = r.notes.map(function (n) {
+        return '<div class="rev-note"><b>' + esc(n.at) + "</b><span>" + esc(n.note) + "</span></div>";
+      }).join("");
+    }
+    $("#methodsGrid").innerHTML = (D.site.methods || []).map(function (m) {
+      return '<div class="mt-item"><b>' + esc(m.name) + "</b><span>" + esc(m.desc) + "</span></div>";
+    }).join("");
+    $("#glossaryGrid").innerHTML = (D.site.glossary || []).map(function (g) {
+      return '<div class="gl-item"><div class="gl-term">' + esc(g.term) + "<i>TERM</i></div>" +
+        '<div class="gl-def">' + esc(g.def) + "</div>" +
+        '<div class="gl-eg">' + esc(g.eg) + "</div></div>";
+    }).join("");
+    $("#promptsGrid").innerHTML = (D.site.prompts || []).map(function (p) {
+      return '<div class="pr-item"><b>' + esc(p.t) + "</b><span>" + esc(p.hint) + "</span></div>";
+    }).join("");
+
+    var iv = D.site.interview;
+    if (iv) {
+      $("#ivHead").innerHTML = '<span class="avatar" style="background:#6e2f2a">顾</span>' +
+        "<div><h3>" + esc(iv.who) + "</h3><p>访谈 · 编辑部长 苏晚 记录</p></div>";
+      $("#ivIntro").textContent = iv.intro;
+      $("#ivList").innerHTML = iv.qa.map(function (x) {
+        return '<div class="iv-item"><div class="iv-q"><span>' + esc(x.q) + '</span></div>' +
+          '<div class="iv-a"><span>' + esc(x.a) + "</span></div></div>";
+      }).join("");
+    }
+    observeReveals();
+  }
+
+  function initReadingPage() {
+    var grid = $("#bookGrid");
+    if (!grid) return;
+    var HUES = { "散文": "#5b7a6a", "小说": "#8b3a3a", "古典": "#9c6b3f", "外国": "#33506b", "非虚构": "#b8964a", "理论": "#6e2f2a" };
+    var cats = ["全部"];
+    (D.site.reading || []).forEach(function (b) { if (cats.indexOf(b.cat) < 0) cats.push(b.cat); });
+    var cur = "全部";
+
+    function paint() {
+      var list = (D.site.reading || []).filter(function (b) { return cur === "全部" || b.cat === cur; });
+      grid.innerHTML = list.map(function (b) {
+        return '<div class="book-card"><span class="book-spine" style="background:' + (HUES[b.cat] || "#8b3a3a") + '">' + esc(b.cat) + "</span>" +
+          '<div class="book-body"><h3>' + esc(b.title) + "</h3>" +
+          '<div class="book-meta"><span>' + esc(b.author) + "</span><span>" + esc(b.year) + "</span><span>" + esc(b.level) + "</span></div>" +
+          '<p class="book-why">' + esc(b.why) + "</p></div></div>";
+      }).join("");
+    }
+
+    $("#bookFilters").innerHTML = cats.map(function (c) {
+      return '<button type="button"' + (c === "全部" ? ' class="on"' : "") + ' data-cat="' + esc(c) + '">' + esc(c) + "</button>";
+    }).join("");
+    $$("#bookFilters button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        $$("#bookFilters button").forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        cur = b.dataset.cat;
+        paint();
+      });
+    });
+    paint();
+  }
+
   /* ============================================================
    * 启动
    * ============================================================ */
@@ -1494,6 +1620,8 @@
     if (page === "index") {
       renderTexts();
       renderIndexSections();
+      renderFeatured();
+      renderBars();
       renderEvents();
       renderMembers();
       renderPortals();
@@ -1513,6 +1641,8 @@
             renderWorks(true);
             renderEvents();
             renderMembers();
+            renderFeatured();
+            renderBars();
             setSourceBadge();
             toast("已连接社团云端作品库");
             return;
@@ -1534,6 +1664,8 @@
     if (page === "works") initWorksPage();
     if (page === "authors") initAuthorsPage();
     if (page === "issue") initIssuePage();
+    if (page === "craft") initCraftPage();
+    if (page === "reading") initReadingPage();
     if (page === "guide") initGuidePage();
     if (page === "about") initAboutPage();
     if (page === "journal") {
