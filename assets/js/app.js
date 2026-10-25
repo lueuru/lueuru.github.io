@@ -1093,6 +1093,154 @@
   }
 
   /* ============================================================
+   * v0.6 扩充区块渲染（首页 / 作品库 / 指南 / 关于）
+   * ============================================================ */
+  function renderIndexSections() {
+    var st = $("#statsStrip");
+    if (st) st.innerHTML = (D.site.stats || []).map(function (s) {
+      return "<div class='stat'><b>" + esc(s.num) + "</b><span>" + esc(s.label) + "</span></div>";
+    }).join("");
+
+    var nb = $("#noticeList");
+    if (nb) nb.innerHTML = (D.site.notices || []).map(function (n) {
+      return "<li><time>" + esc(n.date) + "</time><span>" + esc(n.text) + "</span></li>";
+    }).join("");
+
+    var pre = $("#prefaceBox");
+    if (pre && D.site.preface) {
+      pre.innerHTML = "<span class='preface-tag'>卷首语 · PREFACE</span><h2>" + esc(D.site.preface.title) + "</h2>" +
+        D.site.preface.paragraphs.map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("") +
+        "<div class='preface-sign'>—— " + esc(D.site.preface.author) + "</div>";
+    }
+
+    var cg = $("#columnGrid");
+    if (cg) cg.innerHTML = (D.site.columns || []).map(function (c) {
+      return "<div class='column-item'><h3>" + esc(c.name) + "</h3><p>" + esc(c.desc) + "</p></div>";
+    }).join("");
+
+    var tl = $("#timelineBox");
+    if (tl) tl.innerHTML = (D.site.timeline || []).map(function (t) {
+      return "<div class='tl-item'><div class='tl-year'>" + esc(t.year) + "</div><div class='tl-title'>" + esc(t.title) + "</div><div class='tl-desc'>" + esc(t.desc) + "</div></div>";
+    }).join("");
+
+    var hg = $("#honorGrid");
+    if (hg) hg.innerHTML = (D.site.honors || []).map(function (h) {
+      return "<div class='honor-item'><span class='honor-year'>" + esc(h.year) + "</span><div><div class='honor-title'>" + esc(h.title) + "</div><div class='honor-org'>" + esc(h.org) + "</div></div></div>";
+    }).join("");
+
+    var qs = $("#quoteStrip");
+    if (qs) qs.innerHTML = (D.site.quotes || []).map(function (q) {
+      return "<div class='quote-card'><p>" + esc(q.text) + "</p><cite>—— " + esc(q.from) + "</cite></div>";
+    }).join("");
+
+    var pl = $("#pastList");
+    if (pl) pl.innerHTML = (D.pastEvents || []).map(function (p) {
+      return "<div class='past-item'><div class='past-date'>" + esc(p.date) + "</div><div><h3>" + esc(p.title) + "</h3><p>" + esc(p.desc) + "</p></div></div>";
+    }).join("");
+
+    observeReveals();
+  }
+
+  /* 作品库（works.html）：筛选 + 排序 + 搜索 + 加载更多 */
+  function initWorksPage() {
+    var grid = $("#wlibGrid");
+    if (!grid) return;
+    var st = { cat: "all", sort: "new", q: "", shown: 12 };
+
+    function list() {
+      var arr = DATA.works.slice();
+      if (st.cat !== "all") arr = arr.filter(function (w) { return w.category === st.cat; });
+      if (st.q) {
+        var q = st.q.toLowerCase();
+        arr = arr.filter(function (w) {
+          return ((w.title || "") + (w.author || "") + (w.excerpt || "") + (w.grade || "")).toLowerCase().indexOf(q) > -1;
+        });
+      }
+      if (st.sort === "hot") arr.sort(function (a, b) { return (b.likes || 0) - (a.likes || 0); });
+      else if (st.sort === "rating") arr.sort(function (a, b) { return (b.rating || 0) - (a.rating || 0); });
+      else arr.sort(function (a, b) { return (b.id || 0) - (a.id || 0); });
+      return arr;
+    }
+
+    function paint() {
+      var arr = list();
+      grid.innerHTML = arr.slice(0, st.shown).map(workCard).join("") || "<p class='empty-grid'>没有找到匹配的作品，换个关键词试试。</p>";
+      var more = $("#wlibMore");
+      if (more) {
+        if (arr.length > st.shown) {
+          more.innerHTML = "<button type='button' class='btn btn-l' id='wlibMoreBtn'>加载更多（还有 " + (arr.length - st.shown) + " 篇）</button>";
+          on("#wlibMoreBtn", "click", function () { st.shown += 12; paint(); });
+        } else {
+          more.innerHTML = arr.length ? "<p class='works-all'>共 " + arr.length + " 篇作品</p>" : "";
+        }
+      }
+      var c = $("#wlibCount");
+      if (c) c.textContent = "共 " + arr.length + " 篇";
+      observeReveals();
+    }
+
+    $$("#wlibFilters button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        $$("#wlibFilters button").forEach(function (x) { x.classList.remove("on"); });
+        b.classList.add("on");
+        st.cat = b.dataset.cat;
+        st.shown = 12;
+        paint();
+      });
+    });
+    on("#wlibSort", "change", function () { st.sort = this.value; paint(); });
+    on("#wlibSearch", "input", function () {
+      var v = this.value.trim();
+      clearTimeout(st._t);
+      st._t = setTimeout(function () { st.q = v; st.shown = 12; paint(); }, 200);
+    });
+
+    if (DATA.works.length) paint();
+    loadCloudData().then(function (cloud) {
+      if (cloud) toast("已同步云端作品库");
+      paint();
+    });
+  }
+
+  /* 投稿指南（guide.html） */
+  function initGuidePage() {
+    var g = D.site.guide;
+    if (!g) return;
+    var intro = $("#guideIntro");
+    if (intro) intro.textContent = g.intro;
+    var rules = $("#guideRules");
+    if (rules) rules.innerHTML = g.rules.map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("");
+    var flow = $("#guideFlow");
+    if (flow) flow.innerHTML = g.flow.map(function (f, i) {
+      return "<div class='guide-step'><b>" + (i + 1) + "</b><div><h3>" + esc(f.step) + "</h3><p>" + esc(f.desc) + "</p></div></div>";
+    }).join("");
+    var rw = $("#guideRewards");
+    if (rw) rw.textContent = g.rewards;
+    var faq = $("#guideFaq");
+    if (faq) {
+      faq.innerHTML = g.faq.map(function (f, i) {
+        return "<div class='faq-item' data-i='" + i + "'><button type='button' class='faq-q'>" + esc(f.q) + "</button><div class='faq-a'>" + esc(f.a) + "</div></div>";
+      }).join("");
+      $$("#guideFaq .faq-q").forEach(function (b) {
+        b.addEventListener("click", function () {
+          b.parentElement.classList.toggle("open");
+        });
+      });
+    }
+    var cols = $("#guideColumns");
+    if (cols) cols.innerHTML = (D.site.columns || []).map(function (c) {
+      return "<div class='column-item'><h3>" + esc(c.name) + "</h3><p>" + esc(c.desc) + "</p></div>";
+    }).join("");
+  }
+
+  /* 关于（about.html） */
+  function initAboutPage() {
+    var lead = $("#aboutLead");
+    if (lead) lead.textContent = D.site.intro;
+    renderIndexSections();
+  }
+
+  /* ============================================================
    * 启动
    * ============================================================ */
   function init() {
@@ -1122,6 +1270,7 @@
 
     if (page === "index") {
       renderTexts();
+      renderIndexSections();
       renderEvents();
       renderMembers();
       renderPortals();
@@ -1159,8 +1308,14 @@
     }
     if (page === "work") renderWorkPage();
     if (page === "journal") renderJournal();
+    if (page === "works") initWorksPage();
+    if (page === "guide") initGuidePage();
+    if (page === "about") initAboutPage();
+    if (page === "journal") {
+      loadCloudData().then(function (cloud) { if (cloud) { renderJournal(); } });
+    }
 
-    if (page === "index" || page === "work" || page === "journal") {
+    if (page === "index" || page === "work" || page === "journal" || page === "works" || page === "guide" || page === "about") {
       var y = $("#year");
       if (y) y.textContent = new Date().getFullYear();
     }

@@ -80,14 +80,15 @@
   <div class="head-right">
     <nav class="nav-links" aria-label="主导航">
       <a href="#main" class="active">首页</a>
-      <a href="#about">关于我们</a>
-      <a href="#works">作品展示</a>
+      <a href="#about">关于</a>
+      <a href="#works">作品</a>
+      <a href="works.html">作品库</a>
       <a href="journal.html">社刊</a>
-      <a href="#events">近期活动</a>
-      <a href="#members">社员风采</a>
+      <a href="#events">活动</a>
+      <a href="#members">社员</a>
       <a href="#submission">投稿</a>
-      <a href="#literature">文学网站</a>
-      <a href="#contact">联系我们</a>
+      <a href="guide.html">指南</a>
+      <a href="#contact">联系</a>
     </nav>
     <button class="ubtn" id="userBtn" title="登录 / 注册" aria-label="用户菜单"></button>
     <div class="udrop" id="userDropdown"></div>
@@ -96,10 +97,10 @@
 </header>
 
 <div class="mnav" id="mobileNav">
-  <a href="#main">首页</a><a href="#about">关于我们</a><a href="#works">作品展示</a>
-  <a href="journal.html">社刊</a>
-  <a href="#events">近期活动</a><a href="#members">社员风采</a><a href="#submission">投稿</a>
-  <a href="#literature">文学网站</a><a href="#contact">联系我们</a>
+  <a href="#main">首页</a><a href="#about">关于</a><a href="#works">作品</a>
+  <a href="works.html">作品库</a><a href="journal.html">社刊</a>
+  <a href="#events">活动</a><a href="#members">社员</a><a href="#submission">投稿</a>
+  <a href="guide.html">投稿指南</a><a href="about.html">关于我们</a><a href="#contact">联系</a>
 </div>
 
 <!-- ===================== 幕头 ===================== -->
@@ -115,6 +116,19 @@
     </div>
   </div>
 </section>
+
+<!-- ===================== 数据带 ===================== -->
+<div class="stats-strip rv">
+  <div class="stats-inner" id="statsStrip"></div>
+</div>
+
+<!-- ===================== 公告栏 ===================== -->
+<div class="notice-bar rv">
+  <div class="notice-inner">
+    <span class="notice-tag">公告</span>
+    <ul class="notice-list" id="noticeList"></ul>
+  </div>
+</div>
 
 <!-- ===================== 关于我们 ===================== -->
 <section class="sec bw" id="about">
@@ -138,6 +152,16 @@
   </div>
 </section>
 
+<!-- ===================== 卷首语 ===================== -->
+<section class="si" style="padding-top:10px">
+  <div class="st rv" style="margin-bottom:22px"><span class="tag">Preface</span><h2>卷首语</h2>
+    <p class="desc">每期开篇，编辑部写给你的一封信</p>
+  </div>
+  <div class="preface" style="padding:0">
+    <div class="preface-card rv" id="prefaceBox"></div>
+  </div>
+</section>
+
 <!-- ===================== 作品展示 ===================== -->
 <section class="sec bp" id="works">
   <div class="si">
@@ -158,6 +182,18 @@
     </div>
     <div class="wg" id="worksGrid"></div>
     <div id="loadMoreWrap"></div>
+    <p style="text-align:center;margin-top:22px"><a class="btn btn-l sm" href="works.html">进入作品库 · 按分类与热度浏览全部 →</a></p>
+  </div>
+</section>
+
+<!-- ===================== 栏目 ===================== -->
+<section class="sec bw">
+  <div class="si">
+    <div class="st rv"><span class="tag">Columns</span><h2>社刊栏目</h2>
+      <p class="desc">《年轻的心》固定八个栏目，投稿前先看看你的稿子适合哪一栏</p>
+    </div>
+    <div class="column-grid rv" id="columnGrid"></div>
+    <p style="text-align:center;margin-top:22px"><a class="btn btn-l sm" href="guide.html">查看投稿指南与栏目要求 →</a></p>
   </div>
 </section>
 
@@ -166,7 +202,12 @@
   <div class="si">
     <div class="st rv"><span class="tag">Events</span><h2>近期活动</h2></div>
     <div class="el" id="eventsList"></div>
-    <p class="ev-note">活动日期按打开页面的时间自动排期，倒计时实时更新（基础版本演示逻辑）</p>
+    <p class="ev-note">活动日期按打开页面的时间自动排期，倒计时实时更新</p>
+
+    <div class="st rv" style="margin-top:52px;margin-bottom:20px"><span class="tag">Review</span><h2>往期回顾</h2>
+      <p class="desc">刚刚过去的几场活动</p>
+    </div>
+    <div class="past-list rv" id="pastList"></div>
   </div>
 </section>
 
@@ -175,6 +216,37 @@
   <div class="si">
     <div class="st rv"><span class="tag">Members</span><h2>社员风采</h2></div>
     <div class="mg" id="membersGrid"></div>
+  </div>
+</section>
+
+<!-- ===================== 沿革 ===================== -->
+<section class="sec bp" id="history">
+  <div class="si">
+    <div class="st rv"><span class="tag">History</span><h2>四十二年，一本社刊</h2>
+      <p class="desc">从油印小报到云端作品库</p>
+    </div>
+    <div class="timeline rv" id="timelineBox"></div>
+    <p style="text-align:center;margin-top:26px"><a class="btn btn-l sm" href="about.html">关于我们 · 组织与章程 →</a></p>
+  </div>
+</section>
+
+<!-- ===================== 荣誉 ===================== -->
+<section class="sec bw" id="honors">
+  <div class="si">
+    <div class="st rv"><span class="tag">Honors</span><h2>荣誉墙</h2>
+      <p class="desc">社团与社刊历年获得的肯定</p>
+    </div>
+    <div class="honor-grid rv" id="honorGrid"></div>
+  </div>
+</section>
+
+<!-- ===================== 诗签 ===================== -->
+<section class="sec bp" id="quotes">
+  <div class="si">
+    <div class="st rv"><span class="tag">Marginalia</span><h2>诗签</h2>
+      <p class="desc">那些被我们抄在扉页上的句子</p>
+    </div>
+    <div class="quote-strip rv" id="quoteStrip"></div>
   </div>
 </section>
 
@@ -274,19 +346,45 @@
 <!-- ===================== 页脚 ===================== -->
 <footer>
   <div class="si">
-    <h3>新笔文学社</h3>
-    <p class="tl">以文会友 · 以笔写心 · 以书传情</p>
+    <div class="foot-cols">
+      <div class="foot-brand">
+        <h3>新笔文学社</h3>
+        <p>岳阳县第二中学 · 1984 年创社<br>社刊《年轻的心》· 已出 48 期</p>
+        <p style="margin-top:10px">以文会友 · 以笔写心 · 以书传情</p>
+      </div>
+      <div>
+        <h4>内容</h4>
+        <ul>
+          <li><a href="works.html">作品库</a></li>
+          <li><a href="journal.html">社刊往期</a></li>
+          <li><a href="index.html#history">社团沿革</a></li>
+          <li><a href="index.html#honors">荣誉墙</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>参与</h4>
+        <ul>
+          <li><a href="guide.html">投稿指南</a></li>
+          <li><a href="index.html#submission">在线投稿</a></li>
+          <li><a href="index.html#submission">加入申请</a></li>
+          <li><a href="login.html">社员登录</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>关于</h4>
+        <ul>
+          <li><a href="about.html">关于我们</a></li>
+          <li><a href="about.html#org">组织机构</a></li>
+          <li><a href="index.html#contact">联系我们</a></li>
+          <li><a href="admin.html">内容管理</a></li>
+        </ul>
+      </div>
+    </div>
     <div class="fsoc">
       <a href="#" class="qr-link" data-type="wechat" aria-label="微信公众号"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-message"/></svg></a>
       <a href="#" class="qr-link" data-type="qq" aria-label="QQ群"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-users"/></svg></a>
       <a href="#" aria-label="微博"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#i-globe"/></svg></a>
     </div>
-    <nav class="foot-links" aria-label="页脚导航">
-      <a href="index.html">首页</a>
-      <a href="journal.html">社刊《年轻的心》</a>
-      <a href="#submission">在线投稿</a>
-      <a href="#contact">联系我们</a>
-    </nav>
     <p class="copy" id="copyLine"></p>
   </div>
 </footer>
