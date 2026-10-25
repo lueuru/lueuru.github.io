@@ -117,6 +117,13 @@ window.XB_CLOUD = (function () {
     return r.data || [];
   }
 
+  async function fetchVotes() {
+    var d = db(); if (!d) return null;
+    var r = await d.from("interactions").select("work_id, owner_id").eq("kind", "vote");
+    if (r.error) return null;
+    return r.data || [];
+  }
+
   async function fetchMyMarks(workId) {
     var d = db(); if (!d) return null;
     var r = await d.from("interactions").select("*").eq("work_id", workId).in("kind", ["like", "bookmark"]);
@@ -230,6 +237,7 @@ window.XB_CLOUD = (function () {
     fetchSubmissions: fetchSubmissions,
     fetchComments: fetchComments,
     fetchMyMarks: fetchMyMarks,
+    fetchVotes: fetchVotes,
     saveWork: saveWork,
     deleteWork: deleteWork,
     saveContent: saveContent,

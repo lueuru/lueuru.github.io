@@ -1678,6 +1678,111 @@
       "</div>";
   }
 
+
+  /* ============================================================
+   * v1.1 征文大赛（线上投票）
+   * ============================================================ */
+  function initContestPage() {
+    var c = D.site && D.site.contest;
+    if (!c) return;
+    function setText(id, v) { var el = document.getElementById(id); if (el) el.textContent = v || ""; }
+    setText("contestSeason", c.season);
+    setText("contestTheme", "主题 · " + c.theme);
+    setText("contestLead", c.lead);
+    setText("contestDeadline", c.deadline);
+    setText("contestWords", c.words);
+
+    var pl = $("#prizeList");
+    if (pl) pl.innerHTML = (c.prizes || []).map(function (p) {
+      return '<div class="prize-item"><span class="prize-rank">' + esc(p.rank) + '</span><span class="prize-n">' + esc(p.n) + '</span><span class="prize-d">' + esc(p.prize) + "</span></div>";
+    }).join("");
+
+    var rl = $("#contestRules");
+    if (rl) rl.innerHTML = (c.rules || []).map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("");
+
+    var entries = (c.entries || []).map(function (title) {
+      return DATA.works.filter(function (w) { return w.title === title; })[0];
+    }).filter(Boolean);
+
+    var votes = {};
+    var mine = {};
+    try { mine = JSON.parse(localStorage.getItem("xb_myvotes") || "{}") || {}; } catch (e) { mine = {}; }
+
+    function sorted() {
+      return entries.slice().sort(function (a, b) {
+        return (votes[b.id] || 0) - (votes[a.id] || 0) || (b.likes || 0) - (a.likes || 0);
+      });
+    }
+
+    function paint() {
+      var list = sorted();
+      var grid = $("#entryGrid");
+      if (grid) {
+        grid.innerHTML = list.map(function (w, i) {
+          var n = votes[w.id] || 0;
+          var voted = !!mine[w.id];
+          return '<article class="entry">' +
+            '<div class="entry-art">' + coverArt(w) + "</div>" +
+            '<div class="entry-body"><h3>' + esc(w.title) + "</h3>" +
+            '<div class="entry-meta">' + esc(w.author) + " · " + esc((w.grade || "") + (w.class_name ? w.class_name + "班" : "")) + " · " + esc(D.categories[w.category] || "") + "</div>" +
+            '<p class="entry-ex">' + esc(w.excerpt) + "</p>" +
+            '<div class="entry-foot"><button type="button" class="vote-btn' + (voted ? " on" : "") + '" data-vote="' + w.id + '">' + (voted ? "已投一票" : "投一票") + "</button>" +
+            '<span class="vote-n">' + n + " 票</span>" +
+            '<span class="entry-rank">NO.' + (i + 1) + "</span></div></div></article>";
+        }).join("");
+        $$("#entryGrid [data-vote]").forEach(function (b) {
+          b.addEventListener("click", function () { vote(b.dataset.vote); });
+        });
+      }
+      var rank = $("#rankList");
+      if (rank) {
+        var max = 1;
+        list.forEach(function (w) { if ((votes[w.id] || 0) > max) max = votes[w.id]; });
+        rank.innerHTML = list.slice(0, 6).map(function (w, i) {
+          var n = votes[w.id] || 0;
+          return '<div class="rank-row' + (i === 0 ? " top1" : "") + '"><span class="rank-no">' + String(i + 1).padStart(2, "0") + "</span>" +
+            '<div class="rank-title"><b>' + esc(w.title) + "</b><span>" + esc(w.author) + "</span>" +
+            '<div class="rank-bar"><i style="width:' + Math.round((n / max) * 100) + '%"></i></div></div>' +
+            '<span class="rank-num">' + n + " 票</span></div>";
+        }).join("");
+      }
+    }
+
+    function loadVotes() {
+      if (!window.XB_CLOUD || !XB_CLOUD.isReady()) return;
+      XB_CLOUD.fetchVotes().then(function (rows) {
+        if (!rows) return;
+        votes = {};
+        rows.forEach(function (r) { votes[r.work_id] = (votes[r.work_id] || 0) + 1; });
+        paint();
+      }).catch(function () {});
+    }
+
+    function vote(id) {
+      var w = entries.filter(function (x) { return String(x.id) === String(id); })[0];
+      if (!w) return;
+      var u = curUser();
+      if (!u) { toast("登录后即可投票", "err"); return; }
+      var on = !mine[w.id];
+      if (on) { mine[w.id] = true; votes[w.id] = (votes[w.id] || 0) + 1; }
+      else { delete mine[w.id]; votes[w.id] = Math.max(0, (votes[w.id] || 0) - 1); }
+      try { localStorage.setItem("xb_myvotes", JSON.stringify(mine)); } catch (e) {}
+      paint();
+      if (window.XB_CLOUD && XB_CLOUD.isReady() && u.cloud) {
+        XB_CLOUD.markInteraction(w.id, "vote", on).then(function (r) {
+          if (r && r.error) { toast("投票失败：云端不可用", "err"); return; }
+          toast(on ? "投票成功" : "已撤回投票");
+          loadVotes();
+        }).catch(function () { toast("投票失败：网络异常", "err"); });
+      } else {
+        toast(on ? "已投票（登录云端账号可计票）" : "已撤回投票");
+      }
+    }
+
+    paint();
+    loadVotes();
+  }
+
   /* ============================================================
    * 启动
    * ============================================================ */
@@ -1758,13 +1863,14 @@
     if (page === "issue") initIssuePage();
     if (page === "craft") initCraftPage();
     if (page === "reading") initReadingPage();
+    if (page === "contest") initContestPage();
     if (page === "guide") initGuidePage();
     if (page === "about") initAboutPage();
     if (page === "journal") {
       loadCloudData().then(function (cloud) { if (cloud) { renderJournal(); } });
     }
 
-    if (page === "index" || page === "work" || page === "journal" || page === "works" || page === "guide" || page === "about" || page === "authors" || page === "issue") {
+    if (page === "index" || page === "work" || page === "journal" || page === "works" || page === "guide" || page === "about" || page === "authors" || page === "issue" || page === "contest") {
       var y = $("#year");
       if (y) y.textContent = new Date().getFullYear();
     }
