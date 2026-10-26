@@ -1783,6 +1783,138 @@
     loadVotes();
   }
 
+
+  /* ============================================================
+   * v1.2 全站搜索
+   * ============================================================ */
+  function initSearchPage() {
+    var input = $("#searchInput");
+    if (!input) return;
+    var idx = [];
+    var cur = "全部";
+
+    function build() {
+      idx = [];
+      DATA.works.forEach(function (w) {
+        idx.push({
+          type: "作品", title: w.title,
+          sub: (w.author || "") + " · " + (D.categories[w.category] || "") + " · " + (w.likes || 0) + " 喜欢",
+          text: (w.excerpt || "") + " " + (w.content || []).join(" "),
+          href: "work.html?id=" + w.id
+        });
+      });
+      authorIndex().forEach(function (a) {
+        idx.push({
+          type: "作者", title: a.name,
+          sub: a.works.length + " 篇作品 · " + a.likes + " 获喜欢",
+          text: a.works.map(function (w) { return w.title; }).join(" "),
+          href: "authors.html?name=" + encodeURIComponent(a.name)
+        });
+      });
+      (D.journal.issues || []).forEach(function (is) {
+        idx.push({
+          type: "社刊", title: "第" + is.no + "期 " + is.theme,
+          sub: (is.date || "") + " · " + (is.pieces || []).length + " 篇",
+          text: (is.pieces || []).map(function (x) { return x.title + " " + x.author; }).join(" "),
+          href: "issue.html?no=" + is.no
+        });
+      });
+      (D.site.topics || []).forEach(function (t) {
+        idx.push({ type: "专题", title: t.title, sub: "专题策划", text: t.note + " " + (t.works || []).join(" "), href: "index.html#topics" });
+      });
+      (D.site.columns || []).forEach(function (c) {
+        idx.push({ type: "栏目", title: c.name, sub: "社刊栏目", text: c.desc, href: "guide.html" });
+      });
+      (D.site.geo || []).forEach(function (g) {
+        idx.push({ type: "地理", title: g.name, sub: g.sub || "文学地理", text: g.desc + " " + g.prompt, href: "index.html#geo" });
+      });
+      (D.site.glossary || []).forEach(function (g) {
+        idx.push({ type: "写作", title: g.term, sub: "文学小词典", text: g.def + " " + g.eg, href: "craft.html" });
+      });
+      (D.site.reading || []).forEach(function (b) {
+        idx.push({ type: "书单", title: b.title, sub: b.author + " · " + b.cat + " · " + b.level, text: b.why, href: "reading.html" });
+      });
+    }
+
+    function hi(text, q) {
+      var e = esc(text || "");
+      if (!q) return e;
+      var qe = esc(q).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      try {
+        return e.replace(new RegExp(qe, "gi"), function (m) { return "<mark>" + m + "</mark>"; });
+      } catch (err) { return e; }
+    }
+
+    function render(res, q) {
+      var box = $("#searchResults"), sum = $("#searchSummary");
+      if (!q) {
+        sum.innerHTML = "试试搜「洞庭湖」「母亲」「第 48 期」「留白」，或点下面的标签。";
+        box.innerHTML = "";
+        return;
+      }
+      sum.innerHTML = "找到 <b>" + res.length + "</b> 条与「" + esc(q) + "」相关的内容";
+      if (!res.length) {
+        box.innerHTML = '<p class="search-empty">没有找到。换个词试试——作者名、作品名、地名都可以。</p>';
+        return;
+      }
+      var grouped = {};
+      res.forEach(function (it) { (grouped[it.type] = grouped[it.type] || []).push(it); });
+      box.innerHTML = Object.keys(grouped).map(function (k) {
+        return '<div class="search-group"><h3>' + esc(k) + " · " + grouped[k].length + "</h3>" +
+          grouped[k].map(function (it) {
+            return '<a class="result" href="' + it.href + '"><b>' + hi(it.title, q) + "</b>" +
+              "<span>" + esc(it.sub) + "</span>" +
+              (it.text ? "<p>" + hi(String(it.text).slice(0, 96), q) + "…</p>" : "") + "</a>";
+          }).join("") + "</div>";
+      }).join("");
+    }
+
+    function run() {
+      var q = input.value.trim();
+      if (!q) { render([], ""); return; }
+      var norm = function (v) { return String(v == null ? "" : v).replace(/\s+/g, "").toLowerCase(); };
+      var ql = norm(q);
+      var res = idx.map(function (it) {
+        var score = 0;
+        if (norm(it.title).indexOf(ql) > -1) score += 5;
+        if (norm(it.sub).indexOf(ql) > -1) score += 2;
+        if (norm(it.text).indexOf(ql) > -1) score += 1;
+        return { it: it, score: score };
+      }).filter(function (r) { return r.score > 0 && (cur === "全部" || r.it.type === cur); })
+        .sort(function (a, b) { return b.score - a.score; })
+        .map(function (r) { return r.it; })
+        .slice(0, 40);
+      render(res, q);
+    }
+
+    build();
+    var q0 = new URLSearchParams(location.search).get("q");
+    if (q0) input.value = q0;
+    run();
+
+    var timer = null;
+    input.addEventListener("input", function () {
+      clearTimeout(timer);
+      timer = setTimeout(run, 180);
+    });
+    on("#searchBtn", "click", run);
+    input.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); run(); } });
+
+    $$("#searchTags button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        input.value = b.textContent;
+        run();
+        input.focus();
+      });
+    });
+    var sel = $("#searchType");
+    if (sel) {
+      sel.addEventListener("change", function () { cur = this.value; run(); });
+    }
+    loadCloudData().then(function () { build(); run(); });
+    observeReveals();
+  }
+
   /* ============================================================
    * 启动
    * ============================================================ */
@@ -1864,13 +1996,14 @@
     if (page === "craft") initCraftPage();
     if (page === "reading") initReadingPage();
     if (page === "contest") initContestPage();
+    if (page === "search") initSearchPage();
     if (page === "guide") initGuidePage();
     if (page === "about") initAboutPage();
     if (page === "journal") {
       loadCloudData().then(function (cloud) { if (cloud) { renderJournal(); } });
     }
 
-    if (page === "index" || page === "work" || page === "journal" || page === "works" || page === "guide" || page === "about" || page === "authors" || page === "issue" || page === "contest") {
+    if (page === "index" || page === "work" || page === "journal" || page === "works" || page === "guide" || page === "about" || page === "authors" || page === "issue" || page === "contest" || page === "search") {
       var y = $("#year");
       if (y) y.textContent = new Date().getFullYear();
     }
