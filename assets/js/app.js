@@ -14,6 +14,38 @@
 
   /* 运行时数据：works 可能是本地示例，也可能被远端真实数据替换 */
   var DATA = { works: [], source: "local", remoteTried: false };
+
+  /* 已发表作品（真实）置顶，其余标记为演示示例 */
+  function buildWorks(cloudRows) {
+    var official = (D.officialWorks || []).map(function (w) {
+      var o = {}; Object.keys(w).forEach(function (k) { o[k] = w[k]; });
+      o.verified = true;
+      return o;
+    });
+    var demo;
+    if (cloudRows && cloudRows.length) {
+      demo = cloudRows.map(function (row) {
+        var local = (D.works || []).filter(function (x) { return x.title === row.slug || x.title === row.title; })[0];
+        var content = (row.content && row.content.length) ? row.content : (local ? local.content : null);
+        return {
+          id: row.id, title: row.title, author: row.author,
+          grade: row.grade || "", class_name: row.class_name || "",
+          category: row.category || "essay",
+          excerpt: row.excerpt || (local ? local.excerpt : ""),
+          content: content && content.length ? content : ["（正文待补充）"],
+          likes: row.likes || 0, bookmarks: row.bookmarks || 0,
+          slug: row.slug || row.title, cloud: true, demo: true
+        };
+      });
+    } else {
+      demo = (D.works || []).map(function (w) {
+        var o = {}; Object.keys(w).forEach(function (k) { o[k] = w[k]; });
+        o.demo = true;
+        return o;
+      });
+    }
+    return official.concat(demo);
+  }
   var PAGE_SIZE = 6;
   var wState = { filter: "all", shown: PAGE_SIZE };
   var curWork = null;
@@ -63,7 +95,9 @@
   function bookmarks() { return LS.get("bookmarks", []); }
   function commentsOf(id) { return LS.get("comments", {})[String(id)] || []; }
   function workById(id) {
-    for (var i = 0; i < DATA.works.length; i++) if (DATA.works[i].id === id) return DATA.works[i];
+    for (var i = 0; i < DATA.works.length; i++) {
+      if (String(DATA.works[i].id) === String(id)) return DATA.works[i];
+    }
     return null;
   }
 
@@ -149,24 +183,7 @@
     var corpus = {};
     D.works.forEach(function (w) { corpus[w.title] = w; });
     if (cloud.works && cloud.works.length) {
-      DATA.works = cloud.works.map(function (row) {
-        var local = corpus[row.slug] || corpus[row.title];
-        var content = (row.content && row.content.length) ? row.content : (local ? local.content : null);
-        return {
-          id: row.id,
-          title: row.title,
-          author: row.author,
-          grade: row.grade || "",
-          class_name: row.class_name || "",
-          category: row.category || "essay",
-          excerpt: row.excerpt || (local ? local.excerpt : ""),
-          content: content && content.length ? content : ["（正文待补充）"],
-          likes: row.likes || 0,
-          bookmarks: row.bookmarks || 0,
-          slug: row.slug || row.title,
-          cloud: true
-        };
-      });
+      DATA.works = buildWorks(cloud.works);
     }
     if (cloud.events && cloud.events.length) {
       D.events = cloud.events.map(function (r) {
@@ -174,11 +191,9 @@
         return { title: r.title || b.title || "活动", days: b.days || 14, time: b.time || "18:00-20:00", loc: b.loc || "待定", desc: b.desc || "" };
       });
     }
-    if (cloud.members && cloud.members.length) {
-      D.members = cloud.members.map(function (r) {
-        var b = r.body || {};
-        return { name: r.title || b.name || "社员", role: b.role || "社员", quote: b.quote || "", bio: b.bio || "", hue: b.hue || "#8b3a3a" };
-      });
+    /* 教师区只展示公开资料中的辅导教师；云端社员（演示数据）不再覆盖 */
+    if (D.site && D.site.advisors && D.site.advisors.length) {
+      D.members = D.site.advisors;
     }
     if (cloud.issues && cloud.issues.length) {
       D.journal.issues = cloud.issues.map(function (r) { return r.body || {}; });
@@ -269,7 +284,7 @@
     return '<div class="wc rv d' + ((i % 4) + 1) + '" data-id="' + w.id + '">' +
       '<div class="wci">' + coverArt(w) + '<span class="wcbadge">' + esc(D.categories[w.category] || "") + "</span></div>" +
       '<div class="wcb">' +
-      '<h3 class="bc-title">' + esc(w.title) + "</h3>" +
+      '<h3 class="bc-title">' + esc(w.title) + (w.verified ? '<span class="ver-chip">已发表</span>' : "") + "</h3>" +
       '<div class="wcm">' + esc(w.grade) + (w.class_name ? esc(w.class_name) + "班 · " : " · ") +
       '<a href="authors.html?name=' + encodeURIComponent(w.author) + '">' + esc(w.author) + "</a></div>" +
       '<p class="wce">' + esc(w.excerpt) + "</p>" +
@@ -677,7 +692,7 @@
         '<div class="mav" style="background:linear-gradient(135deg,' + m.hue + "," + m.hue + "cc)\">" + esc(m.name.charAt(0)) + "</div>" +
         "<h3>" + esc(m.name) + "</h3>" +
         '<div class="mrole">' + esc(m.role) + "</div>" +
-        '<p class="mq">“' + esc(m.quote) + '”</p>' +
+        (m.quote ? '<p class="mq">“' + esc(m.quote) + '”</p>' : "") +
         '<div class="mbio">' + esc(m.bio) + "</div></div>";
     }).join("");
     observeReveals();
@@ -868,7 +883,8 @@
    * 作品详情页（work.html）
    * ============================================================ */
   function renderWorkPage() {
-    var id = parseInt(new URLSearchParams(location.search).get("id") || "0", 10);
+    var rawId = new URLSearchParams(location.search).get("id") || "";
+    var id = /^\d+$/.test(rawId) ? parseInt(rawId, 10) : rawId;
     var wrap = $("#wkWrap");
     if (!wrap) return;
 
@@ -891,7 +907,18 @@
       $("#wkTitle").textContent = w.title;
       $("#wkMeta").textContent = (w.grade ? w.grade + (w.class_name ? w.class_name + "班" : "") + " · " : "") + w.author + " · " + (D.categories[w.category] || "") + (w.created_at ? " · " + fmtDate(w.created_at) : "");
       $("#wkArt").innerHTML = coverArt(w);
-      $("#wkBody").innerHTML = w.content.map(function (p) { return p ? "<p>" + esc(p) + "</p>" : ""; }).join("");
+      $("#wkBody").innerHTML = w.content.map(function (p) { return p ? "<p>" + esc(p) + "</p>" : "" }).join("");
+      var srcBox = $("#wkSource");
+      if (srcBox) {
+        if (w.verified) {
+          srcBox.innerHTML =
+            (w.appendix ? '<p class="wk-appendix">' + esc(w.appendix) + "</p>" : "") +
+            (w.review ? '<div class="wk-review"><b>指导教师点评</b><p>' + esc(w.review) + "</p><span>—— " + esc(w.judge || "") + (w.judgeRole ? "，" + esc(w.judgeRole) : "") + "</span></div>" : "") +
+            '<p class="wk-src">来源：' + esc(w.source || "学校公开报道") + (w.tag ? " · " + esc(w.tag) : "") + "</p>";
+        } else {
+          srcBox.innerHTML = '<p class="wk-src wk-demo">示例内容：本文为演示版式所用，非真实投稿，正式上线前请由编辑部替换。</p>';
+        }
+      }
       $("#wkActions").innerHTML =
         '<button type="button" class="like-btn' + (liked ? " liked" : "") + '" data-id="' + w.id + '">' + icon("heart", liked) + ' <span class="n">' + (w.likes + (liked ? 1 : 0)) + "</span> 喜欢</button>" +
         '<button type="button" class="bookmark-btn' + (bmed ? " liked" : "") + '" data-id="' + w.id + '">' + icon("bookmark", bmed) + ' <span class="n">' + (w.bookmarks + (bmed ? 1 : 0)) + "</span> 收藏</button>" +
@@ -1546,7 +1573,15 @@
       return '<div class="pr-item"><b>' + esc(p.t) + "</b><span>" + esc(p.hint) + "</span></div>";
     }).join("");
 
-    var iv = D.site.interview;
+    var rev = $("#reviewsList");
+    if (rev) {
+      rev.innerHTML = (D.site.reviews || []).map(function (r) {
+        return '<div class="wk-review" style="margin-bottom:16px"><b>《' + esc(r.work) + '》· ' + esc(r.author) + "</b>" +
+          "<p>" + esc(r.text) + "</p><span>—— " + esc(r.judge) + "，" + esc(r.role) + "</span></div>";
+      }).join("");
+    }
+
+    var iv = null;
     if (iv) {
       $("#ivHead").innerHTML = '<span class="avatar" style="background:#6e2f2a">顾</span>' +
         "<div><h3>" + esc(iv.who) + "</h3><p>访谈 · 编辑部长 苏晚 记录</p></div>";
@@ -1919,7 +1954,7 @@
    * 启动
    * ============================================================ */
   function init() {
-    DATA.works = D.works.slice();
+    DATA.works = buildWorks();
     applyOverlay();
     var page = document.body.getAttribute("data-page");
 

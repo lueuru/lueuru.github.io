@@ -2368,3 +2368,52 @@ body.dark .search-box button { background: var(--gold); color: #1b1611; }
   .search-box { flex-direction: row; padding: 5px 5px 5px 14px; }
   .search-box button { padding: 8px 16px; }
 }
+
+/* ============================================================
+ * v1.3 真实性标注：已发表徽标 / 点评 / 来源 / 演示提示
+ * ============================================================ */
+.ver-chip {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  border-radius: 3px;
+  padding: 1px 5px;
+  vertical-align: 2px;
+  white-space: nowrap;
+}
+.wk-source { max-width: 34em; margin: 22px auto 0; }
+.wk-appendix {
+  font-family: var(--kai);
+  font-size: 0.86rem;
+  line-height: 1.95;
+  color: var(--ink-3);
+  background: var(--bg-2);
+  border-radius: 8px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.wk-review {
+  border-left: 3px solid var(--gold);
+  background: linear-gradient(100deg, var(--gold-soft), transparent 80%);
+  border-radius: 0 8px 8px 0;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+.wk-review b { display: block; font-size: 0.74rem; letter-spacing: 0.16em; color: var(--gold); margin-bottom: 8px; }
+.wk-review p { font-size: 0.88rem; line-height: 1.95; color: var(--ink-2); }
+.wk-review span { display: block; text-align: right; font-size: 0.78rem; color: var(--ink-3); margin-top: 8px; }
+.wk-src { font-size: 0.78rem; color: var(--ink-3); line-height: 1.8; border-top: 1px dashed var(--line); padding-top: 10px; }
+.wk-demo { color: var(--gold); }
+.demo-note {
+  max-width: var(--maxw);
+  margin: 0 auto 8px;
+  padding: 10px 24px;
+  font-size: 0.78rem;
+  color: var(--ink-3);
+  line-height: 1.8;
+}
+.demo-note b { color: var(--gold); }
