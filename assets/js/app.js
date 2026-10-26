@@ -195,9 +195,7 @@
     if (D.site && D.site.advisors && D.site.advisors.length) {
       D.members = D.site.advisors;
     }
-    if (cloud.issues && cloud.issues.length) {
-      D.journal.issues = cloud.issues.map(function (r) { return r.body || {}; });
-    }
+    /* 期号无公开来源：不再采用云端数据（已清空 site_content 的 issue/event/member） */
   }
 
   function loadCloudData() {
@@ -666,27 +664,10 @@
   function renderEvents() {
     var box = $("#eventsList");
     if (!box) return;
-    box.innerHTML = D.events.map(function (ev, i) {
-      var d = new Date();
-      d.setDate(d.getDate() + ev.days);
-      var hh = parseInt((ev.time || "18:00").split(":")[0], 10);
-      if (isNaN(hh)) hh = 18;
-      var target = new Date(d.getFullYear(), d.getMonth(), d.getDate(), hh, 0, 0);
-      return '<div class="ec rv d' + (i + 1) + '">' +
-        '<div class="ed"><span class="day">' + d.getDate() + '</span><span class="mon">' + (d.getMonth() + 1) + "月</span></div>" +
-        '<div class="eb"><h3>' + esc(ev.title) + "</h3>" +
-        "<p><strong>时间：</strong>" + d.getFullYear() + "年" + (d.getMonth() + 1) + "月" + d.getDate() + "日 " + esc(ev.time) + "</p>" +
-        "<p><strong>地点：</strong>" + esc(ev.loc) + "</p>" +
-        "<p>" + esc(ev.desc) + "</p>" +
-        '<div class="cdw" data-td="' + target.getTime() + '">' +
-        '<div><div class="val">--</div><div class="lbl">天</div></div>' +
-        '<div><div class="val">--</div><div class="lbl">时</div></div>' +
-        '<div><div class="val">--</div><div class="lbl">分</div></div>' +
-        '<div><div class="val">--</div><div class="lbl">秒</div></div>' +
-        "</div></div></div>";
+    box.innerHTML = (D.site.eventsTruth || []).map(function (e) {
+      return '<div class="past-item"><div class="past-date">' + esc(e.year) + "</div>" +
+        "<div><h3>" + esc(e.title) + "</h3><p>" + esc(e.desc) + "</p></div></div>";
     }).join("");
-    tickCountdown();
-    setInterval(tickCountdown, 1000);
     observeReveals();
   }
 
@@ -986,11 +967,11 @@
    * 社刊往期页（journal.html）
    * ============================================================ */
   function renderJournal() {
-    var box = $("#journalList");
-    if (!box) return;
     var j = D.journal;
     var intro = $("#journalIntro");
     if (intro) intro.textContent = j.intro;
+    var box = $("#journalList");
+    if (!box) return;
     box.innerHTML = j.issues.map(function (is, i) {
       return '<div class="jissue rv d' + ((i % 4) + 1) + '">' +
         '<div class="jno"><span class="jno-n">第' + is.no + '期</span><span class="jno-d">' + esc(is.date) + " · " + esc(is.term) + "之卷</span></div>" +
@@ -1265,10 +1246,7 @@
       return "<div class='quote-card'><p>" + esc(q.text) + "</p><cite>—— " + esc(q.from) + "</cite></div>";
     }).join("");
 
-    var pl = $("#pastList");
-    if (pl) pl.innerHTML = (D.pastEvents || []).map(function (p) {
-      return "<div class='past-item'><div class='past-date'>" + esc(p.date) + "</div><div><h3>" + esc(p.title) + "</h3><p>" + esc(p.desc) + "</p></div></div>";
-    }).join("");
+    /* 往期回顾已并入「活动纪事」，此处不再渲染 */
 
     renderDaily();
     observeReveals();
@@ -1477,7 +1455,15 @@
     function paint() {
       var list = D.journal.issues || [];
       var is = list[idx] || list[0];
-      if (!is) return;
+      if (!is) {
+        var t = $("#issueTitle");
+        if (t) t.textContent = "期号待补";
+        var m2 = $("#issueMeta");
+        if (m2) m2.textContent = "具体期号与篇目暂无可靠来源，等编辑部提供样刊后再补";
+        var toc = $("#issueToc");
+        if (toc) toc.innerHTML = '<p class="ad-empty">暂无目录。已发表作品名录见 <a href="about.html#catalog">关于我们</a>。</p>';
+        return;
+      }
       $("#issueTitle").textContent = "第" + is.no + "期 · " + is.theme;
       $("#issueMeta").textContent = "《年轻的心》 · " + is.date + " · " + is.term + "季刊";
       document.title = "第" + is.no + "期 " + is.theme + " - 新笔文学社";
