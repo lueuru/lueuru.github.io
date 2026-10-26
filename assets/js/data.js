@@ -1207,3 +1207,23 @@ window.XB_DATA = {
     { year: "2007", title: "岳阳市示范性普通高中（学校）", org: "岳阳市教育局" }
   ];
 })();
+
+/* ============================================================
+ * v1.5 活动现场照片（编辑部提供，真实）
+ * 说明：照片为微信压缩版（280×210 / 373×210），说明文字仅描述画面可见内容
+ * ============================================================ */
+(function () {
+  var D = window.XB_DATA;
+  D.site.gallery = [
+    { src: "assets/photos/event-01.jpg", cap: "获奖学生与老师合影", note: "八人一组，手持获奖证书" },
+    { src: "assets/photos/event-09.jpg", cap: "礼堂全景", note: "主席台、大屏与横幅" },
+    { src: "assets/photos/event-03.jpg", cap: "台下就座的师生", note: "会场后区，横幅悬挂" },
+    { src: "assets/photos/event-08.jpg", cap: "全体起立", note: "典礼中的一个环节" },
+    { src: "assets/photos/event-04.jpg", cap: "教师领奖合影", note: "四位老师手持证书" },
+    { src: "assets/photos/event-07.jpg", cap: "获奖名单在大屏公示", note: "大屏列出获奖学生名单" },
+    { src: "assets/photos/event-05.jpg", cap: "获奖学生合影（一）", note: "学生与老师同台" },
+    { src: "assets/photos/event-06.jpg", cap: "获奖学生合影（二）", note: "三位学生与颁奖老师" },
+    { src: "assets/photos/event-02.jpg", cap: "典礼开始前的主席台", note: "舞台、绿植与大屏" }
+  ];
+  D.site.galleryNote = "照片由编辑部提供，为微信压缩版（约 280×210），清晰度有限；如需大图或注明活动全称与届次，请提供原图与说明。涉及学生肖像，正式上线前请确认已获得本人及家长同意。";
+})();

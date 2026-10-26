@@ -1983,6 +1983,64 @@
     observeReveals();
   }
 
+
+  /* ============================================================
+   * v1.5 活动现场相册
+   * ============================================================ */
+  function lightboxOpen(src, cap) {
+    var lb = $("#lightbox");
+    if (!lb) return;
+    var img = lb.querySelector("img");
+    if (img) img.src = src;
+    var c = lb.querySelector(".lightbox-cap");
+    if (c) c.textContent = cap || "";
+    lb.classList.add("open");
+  }
+
+  function bindLightbox() {
+    var lb = $("#lightbox");
+    if (!lb || lb._bound) return;
+    lb._bound = true;
+    lb.addEventListener("click", function (e) {
+      if (e.target === lb || (e.target.className || "").indexOf("lightbox-close") > -1) {
+        lb.classList.remove("open");
+      }
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") lb.classList.remove("open");
+    });
+    document.addEventListener("click", function (e) {
+      var card = e.target.closest ? e.target.closest("[data-photo]") : null;
+      if (!card) return;
+      var img = card.querySelector("img");
+      if (!img) return;
+      lightboxOpen(img.getAttribute("src"), card.getAttribute("data-cap") || img.alt || "");
+    });
+  }
+
+  function photoCard(p, withCap) {
+    return '<figure class="photo-card" data-photo data-cap="' + esc(p.cap || "") + '">' +
+      '<img src="' + p.src + '" alt="' + esc(p.cap || "") + '" loading="lazy">' +
+      (withCap ? '<figcaption class="photo-cap"><b>' + esc(p.cap || "") + "</b><span>" + esc(p.note || "") + "</span></figcaption>" : "") +
+      "</figure>";
+  }
+
+  function renderGallery() {
+    var box = $("#photoGrid");
+    if (!box) return;
+    box.innerHTML = (D.site.gallery || []).map(function (p) { return photoCard(p, true); }).join("");
+    var note = $("#galleryNote");
+    if (note) note.textContent = D.site.galleryNote || "";
+    bindLightbox();
+  }
+
+  function renderGalleryStrip() {
+    var box = $("#galleryStrip");
+    if (!box) return;
+    box.innerHTML = (D.site.gallery || []).slice(0, 4).map(function (p) { return photoCard(p, false); }).join("");
+    bindLightbox();
+  }
+
   /* ============================================================
    * 启动
    * ============================================================ */
@@ -2018,6 +2076,7 @@
       renderBars();
       renderTopics();
       renderGeo();
+      renderGalleryStrip();
       renderEvents();
       renderMembers();
       renderPortals();
@@ -2066,13 +2125,14 @@
     if (page === "reading") initReadingPage();
     if (page === "contest") initContestPage();
     if (page === "search") initSearchPage();
+    if (page === "gallery") renderGallery();
     if (page === "guide") initGuidePage();
     if (page === "about") initAboutPage();
     if (page === "journal") {
       loadCloudData().then(function (cloud) { if (cloud) { renderJournal(); } });
     }
 
-    if (page === "index" || page === "work" || page === "journal" || page === "works" || page === "guide" || page === "about" || page === "authors" || page === "issue" || page === "contest" || page === "search") {
+    if (page === "index" || page === "work" || page === "journal" || page === "works" || page === "guide" || page === "about" || page === "authors" || page === "issue" || page === "contest" || page === "search" || page === "gallery") {
       var y = $("#year");
       if (y) y.textContent = new Date().getFullYear();
     }

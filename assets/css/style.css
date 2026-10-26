@@ -2417,3 +2417,104 @@ body.dark .search-box button { background: var(--gold); color: #1b1611; }
   line-height: 1.8;
 }
 .demo-note b { color: var(--gold); }
+
+/* ============================================================
+ * v1.5 活动现场相册
+ * ============================================================ */
+.photo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+  max-width: var(--maxw);
+  margin: 24px auto 0;
+  padding: 0 24px;
+}
+.photo-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: zoom-in;
+  transition: transform 0.3s var(--ease), box-shadow 0.3s;
+}
+.photo-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-sm); }
+.photo-card img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  display: block;
+  background: var(--bg-2);
+}
+.photo-cap { padding: 10px 12px 12px; }
+.photo-cap b { display: block; font-size: 0.86rem; }
+.photo-cap span { display: block; font-size: 0.74rem; color: var(--ink-3); margin-top: 2px; }
+.photo-note {
+  max-width: var(--maxw);
+  margin: 18px auto 0;
+  padding: 0 24px;
+  font-size: 0.76rem;
+  color: var(--ink-3);
+  line-height: 1.8;
+}
+.lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(18, 14, 10, 0.86);
+  backdrop-filter: blur(4px);
+  padding: 20px;
+}
+.lightbox.open { display: flex; }
+.lightbox img {
+  max-width: min(92vw, 900px);
+  max-height: 86vh;
+  border-radius: 6px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  image-rendering: auto;
+}
+.lightbox-cap {
+  position: absolute;
+  bottom: 24px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.84rem;
+  letter-spacing: 0.06em;
+}
+.lightbox-close {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: transparent;
+  color: #fff;
+  font-size: 1.3rem;
+  cursor: pointer;
+  line-height: 1;
+}
+/* 首页相册条 */
+.gallery-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  max-width: var(--maxw);
+  margin: 22px auto 0;
+  padding: 0 24px;
+}
+.gallery-strip .photo-card img { aspect-ratio: 4 / 3; }
+.gallery-strip .photo-cap { display: none; }
+@media (max-width: 760px) {
+  .gallery-strip { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* 相册：宽屏 3 列（9 张正好 3×3） */
+@media (min-width: 900px) {
+  .photo-grid { grid-template-columns: repeat(3, 1fr); }
+}
