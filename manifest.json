@@ -11,15 +11,21 @@
   "theme_color": "#8b3a3a",
   "icons": [
     {
-      "src": "assets/icons/emblem-mini.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "assets/icons/emblem-64.png",
+      "sizes": "64x64",
+      "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "assets/icons/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "assets/icons/emblem-180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/icons/emblem-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any"
     }
   ]

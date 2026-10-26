@@ -2518,3 +2518,10 @@ body.dark .search-box button { background: var(--gold); color: #1b1611; }
 @media (min-width: 900px) {
   .photo-grid { grid-template-columns: repeat(3, 1fr); }
 }
+
+
+/* 真实社徽（圆形徽标） */
+.logo-mark { border-radius: 50%; box-shadow: none; }
+.hero-seal { border-radius: 50%; }
+.foot-seal { border-radius: 50%; }
+.seal-lg { border-radius: 50%; background: var(--card); }

@@ -1916,7 +1916,7 @@
     function render(res, q) {
       var box = $("#searchResults"), sum = $("#searchSummary");
       if (!q) {
-        sum.innerHTML = "试试搜「洞庭湖」「母亲」「第 48 期」「留白」，或点下面的标签。";
+        sum.innerHTML = "试试搜「洞庭湖」「稻草」「母亲」「留白」，或点下面的标签。";
         box.innerHTML = "";
         return;
       }
