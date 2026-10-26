@@ -13,7 +13,7 @@
   var $$ = function (s, el) { return Array.prototype.slice.call((el || document).querySelectorAll(s)); };
 
   /* 运行时数据：works 可能是本地示例，也可能被远端真实数据替换 */
-  var DATA = { works: [], source: "local", remoteTried: false };
+  var DATA = { works: [], source: "local", remoteTried: false, showDemo: false };
 
   /* 已发表作品（真实）置顶，其余标记为演示示例 */
   function buildWorks(cloudRows) {
@@ -264,6 +264,7 @@
    * ============================================================ */
   function matchWorks() {
     return DATA.works.filter(function (w) {
+      if (!w.verified && !DATA.showDemo) return false;
       return wState.filter === "all" || w.category === wState.filter;
     });
   }
@@ -292,6 +293,28 @@
       '<button type="button" class="like-btn' + (liked ? " liked" : "") + '" data-id="' + w.id + '" aria-label="点赞">' + icon("heart", liked) + ' <span class="n">' + (w.likes + (liked ? 1 : 0)) + "</span></button>" +
       '<button type="button" class="bookmark-btn' + (bmed ? " liked" : "") + '" data-id="' + w.id + '" aria-label="收藏">' + icon("bookmark", bmed) + ' <span class="n">' + (w.bookmarks + (bmed ? 1 : 0)) + "</span></button>" +
       "</div></div></div>";
+  }
+
+  function updateDemoToggle() {
+    var n = DATA.works.filter(function (w) { return !w.verified; }).length;
+    $$("[data-demo-toggle]").forEach(function (b) {
+      b.textContent = DATA.showDemo ? "只看已发表作品" : ("显示示例作品（" + n + " 篇）");
+    });
+  }
+
+  function bindDemoToggle() {
+    $$("[data-demo-toggle]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        DATA.showDemo = !DATA.showDemo;
+        updateDemoToggle();
+        if (document.body.getAttribute("data-page") === "works") {
+          var grid = $("#wlibGrid");
+          if (grid) { location.reload(); return; }
+        }
+        renderWorks(true);
+      });
+    });
+    updateDemoToggle();
   }
 
   function renderWorks(reset) {
@@ -1258,7 +1281,7 @@
     var st = { cat: "all", sort: "new", q: "", shown: 12 };
 
     function list() {
-      var arr = DATA.works.slice();
+      var arr = DATA.works.filter(function (w) { return w.verified || DATA.showDemo; });
       if (st.cat !== "all") arr = arr.filter(function (w) { return w.category === st.cat; });
       if (st.q) {
         var q = st.q.toLowerCase();
@@ -1305,6 +1328,7 @@
       st._t = setTimeout(function () { st.q = v; st.shown = 12; paint(); }, 200);
     });
 
+    bindDemoToggle();
     if (DATA.works.length) paint();
     loadCloudData().then(function (cloud) {
       if (cloud) toast("已同步云端作品库");
@@ -1347,6 +1371,15 @@
   function initAboutPage() {
     var lead = $("#aboutLead");
     if (lead) lead.textContent = D.site.intro;
+    var cat = $("#catalogList");
+    if (cat) {
+      cat.innerHTML = (D.site.catalog || []).map(function (c) {
+        return "<div class='toc-row'><div><span class='t'>" + esc(c.title) + "</span>" +
+          "<span class='toc-type'>" + esc(c.kind) + "</span></div>" +
+          "<div class='a'>" + esc(c.author) + "</div>" +
+          "<div class='p' style='font-size:.72rem'>" + esc(c.where) + "</div></div>";
+      }).join("");
+    }
     renderIndexSections();
   }
 
@@ -1990,6 +2023,7 @@
       renderPortals();
       bindSearch();
       bindWorksEvents();
+      bindDemoToggle();
       bindForm("#subForm", "#subOk", "submissions", "投稿已提交，我们将尽快审核", "提交投稿", true);
       bindForm("#memForm", "#memOk", "applications", "申请已提交，我们将尽快与您联系", "提交申请", true);
       if (DATA.source === "local-managed") {
