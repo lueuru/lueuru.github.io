@@ -2091,10 +2091,26 @@
   function renderPeople() {
     var box = $("#peopleList");
     if (!box) return;
-    box.innerHTML = (window.XB_PEOPLE || []).map(function (p) {
-      return '<div class="org-item"><b>' + esc(p.name) + "</b><span>" + esc(p.role) + " · " + esc(p.note) +
-        ' · <a href="activity.html?id=' + p.act + '" style="color:var(--gold)">出处</a></span></div>';
+    var groups = [
+      { k: "学校领导", test: /校长|书记|主任/ },
+      { k: "社团教师", test: /社长|主编|教师|老师/ },
+      { k: "学生社干", test: /学生|设计者/ }
+    ];
+    var all = window.XB_PEOPLE || [];
+    box.innerHTML = groups.map(function (g) {
+      var list = all.filter(function (p) {
+        if (g.k === "学生社干") return g.test.test(p.role);
+        if (g.k === "社团教师") return g.test.test(p.role) && !/校长|书记|主任/.test(p.role);
+        return g.test.test(p.role);
+      });
+      if (!list.length) return "";
+      return '<div class="ppl-group"><h3 class="ppl-h">' + g.k + " · " + list.length + "</h3>" +
+        list.map(function (p) {
+          return '<div class="org-item"><b>' + esc(p.name) + "</b><span>" + esc(p.role) + " · " + esc(p.note) +
+            ' · <a href="activity.html?id=' + p.act + '" style="color:var(--gold)">出处</a></span></div>';
+        }).join("") + "</div>";
     }).join("");
+    observeReveals();
   }
 
   function renderGallery() {

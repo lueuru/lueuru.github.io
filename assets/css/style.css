@@ -2612,3 +2612,12 @@ body.dark .oc-node.lead em { color: rgba(27, 22, 17, 0.66); }
 .mp-thumbs img:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
 .mp-more { font-size: 0.76rem; color: var(--ink-3); margin-top: 8px; }
 @media (max-width: 600px) { .mp-thumbs { grid-template-columns: repeat(3, 1fr); } }
+
+/* 人物志分组 */
+.ppl-group { margin-bottom: 18px; }
+.ppl-group:last-child { margin-bottom: 0; }
+.ppl-h {
+  font-size: 0.72rem; letter-spacing: 0.2em; color: var(--gold);
+  margin-bottom: 8px; display: flex; align-items: center; gap: 10px;
+}
+.ppl-h::after { content: ""; flex: 1; height: 1px; background: var(--line); }
