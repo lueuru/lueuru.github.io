@@ -1887,6 +1887,9 @@
       (D.site.glossary || []).forEach(function (g) {
         idx.push({ type: "写作", title: g.term, sub: "文学小词典", text: g.def + " " + g.eg, href: "craft.html" });
       });
+      (window.XB_PEOPLE || []).forEach(function (p) {
+        idx.push({ type: "人物", title: p.name, sub: p.role, text: p.note, href: "activity.html?id=" + p.act });
+      });
       (window.XB_ACTIVITIES || []).forEach(function (a) {
         idx.push({
           type: "活动", title: a.title, sub: a.date + " · 活动档案",
