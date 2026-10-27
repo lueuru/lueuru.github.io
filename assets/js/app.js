@@ -2025,6 +2025,15 @@
       "</figure>";
   }
 
+  function renderFlow(act) {
+    var box = $("#actFlow");
+    if (!box) return;
+    var flow = (D.site.flow || {})[act.id];
+    if (!flow) { box.innerHTML = ""; return; }
+    box.innerHTML = '<div class="st rv on" style="margin:6px 0 14px"><span class="tag">Agenda</span><h2>会议议程</h2></div>' +
+      '<ol class="flow">' + flow.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + '</ol>';
+  }
+
   function renderMeipian() {
     var box = $("#meipianList");
     if (!box) return;
@@ -2071,6 +2080,7 @@
     box.innerHTML = act.paras.map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("");
     var src = $("#actSrc");
     if (src) src.textContent = "本文文字与照片据「新笔文学社」美篇原文整理（" + act.date + "），版权归原作者。";
+    renderFlow(act);
     var nav = $("#actNav");
     if (nav) {
       var i0 = list.indexOf(act), prev = list[i0 - 1], next = list[i0 + 1];

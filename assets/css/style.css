@@ -2628,3 +2628,14 @@ body.dark .oc-node.lead em { color: rgba(27, 22, 17, 0.66); }
   letter-spacing: 0.1em; color: var(--gold); border: 1px solid var(--line-2);
   border-radius: 3px; padding: 0 5px; vertical-align: 2px;
 }
+
+/* 会议议程 */
+.flow { counter-reset: fl; display: grid; gap: 8px; margin: 0 0 22px; padding: 0; list-style: none; }
+.flow li {
+  counter-increment: fl; position: relative; padding: 10px 14px 10px 46px;
+  background: var(--bg-2); border-radius: 8px; font-size: 0.86rem; line-height: 1.7; color: var(--ink-2);
+}
+.flow li::before {
+  content: counter(fl, decimal-leading-zero); position: absolute; left: 14px; top: 10px;
+  font-family: var(--serif); font-size: 0.8rem; color: var(--gold); font-weight: 700;
+}
