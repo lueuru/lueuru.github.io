@@ -2596,3 +2596,19 @@ body.dark .oc-node.lead em { color: rgba(27, 22, 17, 0.66); }
   .oc-row::before { display: none; }
   .oc-row .oc-node::before { display: none; }
 }
+
+/* 美篇图文档案 */
+.mp-item { border-bottom: 1px dashed var(--line); padding: 18px 0; }
+.mp-item:last-child { border-bottom: none; }
+.mp-head { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; font-size: 0.9rem; }
+.mp-head b { color: var(--gold); font-variant-numeric: tabular-nums; flex: none; font-weight: 700; }
+.mp-head a { margin-left: auto; color: var(--gold); font-size: 0.8rem; white-space: nowrap; }
+.mp-thumbs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+.mp-thumbs img {
+  width: 100%; aspect-ratio: 4 / 3; object-fit: cover;
+  border-radius: 6px; cursor: zoom-in; background: var(--bg-2);
+  transition: transform 0.3s var(--ease), box-shadow 0.3s;
+}
+.mp-thumbs img:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.mp-more { font-size: 0.76rem; color: var(--ink-3); margin-top: 8px; }
+@media (max-width: 600px) { .mp-thumbs { grid-template-columns: repeat(3, 1fr); } }

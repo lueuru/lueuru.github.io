@@ -1385,3 +1385,15 @@ window.XB_DATA = {
     { date: "2024-11-15", title: "新笔启航，逐梦未来——岳阳县二中「新笔文学社」启动大会", url: "https://www.meipian.cn/58hgatrp" }
   ];
 })();
+
+/* v2.3 美篇配图：按文章 id 绑定已下载的图片（assets/photos/mp/） */
+(function () {
+  var D = window.XB_DATA;
+  var counts = { "5qa6x54w": 7, "5gj80nen": 7, "5cle8s5p": 3, "5b3emvmi": 5, "5a3evzcc": 7, "58hgatrp": 7, "5pqxb3ft": 3 };
+  (D.site.meipian || []).forEach(function (m) {
+    var id = m.url.split("/").pop();
+    var n = counts[id] || 0;
+    m.photos = [];
+    for (var i = 1; i <= n; i++) m.photos.push("assets/photos/mp/" + id + "-" + i + ".jpg");
+  });
+})();

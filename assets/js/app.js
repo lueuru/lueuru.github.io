@@ -2016,10 +2016,19 @@
   function renderMeipian() {
     var box = $("#meipianList");
     if (!box) return;
-    box.innerHTML = (D.site.meipian || []).map(function (m, i) {
-      return '<div class="org-item"><b>' + esc(m.date || "") + "</b><span>" +
-        esc(m.title) + ' · <a href="' + m.url + '" target="_blank" rel="noopener" style="color:var(--gold)">阅读原文 →</a></span></div>';
+    box.innerHTML = (D.site.meipian || []).map(function (m) {
+      var photos = m.photos || [];
+      var show = photos.slice(0, 4);
+      return '<div class="mp-item">' +
+        '<div class="mp-head"><b>' + esc(m.date || "") + "</b><span>" + esc(m.title) + "</span>" +
+        '<a href="' + m.url + '" target="_blank" rel="noopener">原文 →</a></div>' +
+        (show.length ? '<div class="mp-thumbs">' + show.map(function (src) {
+          return '<img src="' + src + '" alt="' + esc(m.title) + '" loading="lazy" data-photo data-cap="' + esc(m.date + " · " + m.title) + '">';
+        }).join("") + "</div>" : "") +
+        (photos.length > 4 ? '<p class="mp-more">另有 ' + (photos.length - 4) + " 张，见原文</p>" : "") +
+        "</div>";
     }).join("");
+    bindLightbox();
   }
 
   function renderGallery() {
