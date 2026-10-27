@@ -2009,13 +2009,15 @@
       if (!card) return;
       var img = card.querySelector("img");
       if (!img) return;
-      lightboxOpen(img.getAttribute("src"), card.getAttribute("data-cap") || img.alt || "");
+      lightboxOpen(img.getAttribute("data-full") || img.getAttribute("src"), card.getAttribute("data-cap") || img.alt || "");
     });
   }
 
+  function thumbOf(src) { return src.replace("assets/photos/", "assets/photos/th/"); }
+
   function photoCard(p, withCap) {
     return '<figure class="photo-card" data-photo data-cap="' + esc(p.cap || "") + '">' +
-      '<img src="' + p.src + '" alt="' + esc(p.cap || "") + '" loading="lazy">' +
+      '<img src="' + thumbOf(p.src) + '" data-full="' + p.src + '" alt="' + esc(p.cap || "") + '" loading="lazy">' +
       (withCap ? '<figcaption class="photo-cap"><b>' + esc(p.cap || "") + "</b><span>" + esc(p.note || "") + "</span></figcaption>" : "") +
       "</figure>";
   }
@@ -2031,7 +2033,7 @@
         '<a class="mp-title" href="activity.html?id=' + m.url.split("/").pop() + '">' + esc(m.title) + "</a>" +
         '<a href="' + m.url + '" target="_blank" rel="noopener">原文 →</a></div>' +
         (show.length ? '<div class="mp-thumbs">' + show.map(function (src) {
-          return '<img src="' + src + '" alt="' + esc(m.title) + '" loading="lazy" data-photo data-cap="' + esc(m.date + " · " + m.title) + '">';
+          return '<img src="' + thumbOf(src) + '" data-full="' + src + '" alt="' + esc(m.title) + '" loading="lazy" data-photo data-cap="' + esc(m.date + " · " + m.title) + '">';
         }).join("") + "</div>" : "") +
         (photos.length > 4 ? '<p class="mp-more">另有 ' + (photos.length - 4) + " 张，见原文</p>" : "") +
         "</div>";
@@ -2066,14 +2068,30 @@
     box.innerHTML = act.paras.map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("");
     var src = $("#actSrc");
     if (src) src.textContent = "本文文字与照片据「新笔文学社」美篇原文整理（" + act.date + "），版权归原作者。";
+    var nav = $("#actNav");
+    if (nav) {
+      var i0 = list.indexOf(act), prev = list[i0 - 1], next = list[i0 + 1];
+      nav.innerHTML = (prev ? '<a class="btn btn-l sm" href="activity.html?id=' + prev.id + '">← ' + esc(prev.title.slice(0, 12)) + "…</a>" : "<span></span>") +
+        '<a class="btn btn-l sm" href="gallery.html#meipianList">全部活动</a>' +
+        (next ? '<a class="btn btn-l sm" href="activity.html?id=' + next.id + '">' + esc(next.title.slice(0, 12)) + "… →</a>" : "<span></span>");
+    }
     var ph = $("#actPhotos");
     if (ph) {
       ph.innerHTML = act.photos.map(function (s2) {
         return '<figure class="photo-card" data-photo data-cap="' + esc(act.title) + '">' +
-          '<img src="' + s2 + '" alt="' + esc(act.title) + '" loading="lazy"></figure>';
+          '<img src="' + thumbOf(s2) + '" data-full="' + s2 + '" alt="' + esc(act.title) + '" loading="lazy"></figure>';
       }).join("");
       bindLightbox();
     }
+  }
+
+  function renderPeople() {
+    var box = $("#peopleList");
+    if (!box) return;
+    box.innerHTML = (window.XB_PEOPLE || []).map(function (p) {
+      return '<div class="org-item"><b>' + esc(p.name) + "</b><span>" + esc(p.role) + " · " + esc(p.note) +
+        ' · <a href="activity.html?id=' + p.act + '" style="color:var(--gold)">出处</a></span></div>';
+    }).join("");
   }
 
   function renderGallery() {
@@ -2179,6 +2197,7 @@
     if (page === "search") initSearchPage();
     if (page === "gallery") renderGallery();
     if (page === "activity") initActivityPage();
+    if (page === "about") renderPeople();
     if (page === "guide") initGuidePage();
     if (page === "about") initAboutPage();
     if (page === "journal") {
