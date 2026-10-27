@@ -666,7 +666,9 @@
     if (!box) return;
     box.innerHTML = (D.site.eventsTruth || []).map(function (e) {
       return '<div class="past-item"><div class="past-date">' + esc(e.year) + "</div>" +
-        "<div><h3>" + esc(e.title) + "</h3><p>" + esc(e.desc) + "</p></div></div>";
+        "<div><h3>" + esc(e.title) + "</h3><p>" + esc(e.desc || "") +
+        (e.url ? ' <a href="' + e.url + '" target="_blank" rel="noopener" style="color:var(--gold);white-space:nowrap">阅读原文 →</a>' : "") +
+        "</p></div></div>";
     }).join("");
     observeReveals();
   }
