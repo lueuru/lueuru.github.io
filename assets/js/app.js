@@ -1973,10 +1973,6 @@
         input.focus();
       });
     });
-    var sel = $("#searchType");
-    if (sel) {
-      sel.addEventListener("change", function () { cur = this.value; run(); });
-    }
     loadCloudData().then(function () { build(); run(); });
     observeReveals();
   }
