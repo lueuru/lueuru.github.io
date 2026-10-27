@@ -1367,3 +1367,20 @@ window.XB_DATA = {
     history: "《巴陵文萃》所载旧社简介曾列「编辑部、文秘部、组织部、美术部、发展规划所」五个部门，为早前设置；现行架构以本页为准。"
   };
 })();
+
+/* ============================================================
+ * v2.1 活动档案：美篇原文（编辑部提供链接，7 篇）
+ * 标题取自各页 <title>；日期为页面动态加载，未臆测故不列
+ * ============================================================ */
+(function () {
+  var D = window.XB_DATA;
+  D.site.meipian = [
+    { date: "2026-10-18", title: "心怀星梦，策马前行——新学期第一次全体大会圆满召开", url: "https://www.meipian.cn/5qa6x54w" },
+    { date: "2026-09-28", title: "凝心聚力启新程，笔耕不辍向未来——新学期开学工作会议", url: "https://www.meipian.cn/5pqxb3ft" },
+    { date: "2025-09-27", title: "燕雁书晴空，新笔谱新章——2025 年度工作总结暨迎新大会", url: "https://www.meipian.cn/5gj80nen" },
+    { date: "2025-04-22", title: "根植红色基因，赓续红色血脉——新笔文学社第三次活动", url: "https://www.meipian.cn/5cle8s5p" },
+    { date: "2025-02-26", title: "执笔绘新章，同心绘文脉——社团干部会", url: "https://www.meipian.cn/5b3emvmi" },
+    { date: "2025-01-15", title: "潮平岸阔，乘风前行——年度总结暨表彰大会", url: "https://www.meipian.cn/5a3evzcc" },
+    { date: "2024-11-15", title: "新笔启航，逐梦未来——岳阳县二中「新笔文学社」启动大会", url: "https://www.meipian.cn/58hgatrp" }
+  ];
+})();

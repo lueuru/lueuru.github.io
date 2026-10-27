@@ -2011,6 +2011,15 @@
       "</figure>";
   }
 
+  function renderMeipian() {
+    var box = $("#meipianList");
+    if (!box) return;
+    box.innerHTML = (D.site.meipian || []).map(function (m, i) {
+      return '<div class="org-item"><b>' + esc(m.date || "") + "</b><span>" +
+        esc(m.title) + ' · <a href="' + m.url + '" target="_blank" rel="noopener" style="color:var(--gold)">阅读原文 →</a></span></div>';
+    }).join("");
+  }
+
   function renderGallery() {
     var box = $("#photoGrid");
     if (!box) return;
@@ -2018,6 +2027,7 @@
     var note = $("#galleryNote");
     if (note) note.textContent = D.site.galleryNote || "";
     bindLightbox();
+    renderMeipian();
   }
 
   function renderGalleryStrip() {
