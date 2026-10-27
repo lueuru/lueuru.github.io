@@ -2525,3 +2525,74 @@ body.dark .search-box button { background: var(--gold); color: #1b1611; }
 .hero-seal { border-radius: 50%; }
 .foot-seal { border-radius: 50%; }
 .seal-lg { border-radius: 50%; background: var(--card); }
+
+/* ============================================================
+ * v2.0 组织架构图
+ * ============================================================ */
+.orgchart {
+  margin: 26px auto 8px;
+  max-width: 780px;
+  text-align: center;
+}
+.oc-node {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 20px;
+  border: 1px solid var(--line-2);
+  border-radius: 8px;
+  background: var(--card);
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: var(--shadow-sm);
+  min-width: 92px;
+}
+.oc-node em {
+  font-style: normal;
+  font-size: 0.68rem;
+  font-weight: 400;
+  color: var(--ink-3);
+  letter-spacing: 0.06em;
+}
+.oc-node.lead {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+body.dark .oc-node.lead { background: var(--gold); border-color: var(--gold); color: #1b1611; }
+.oc-node.lead em { color: rgba(255, 255, 255, 0.78); }
+body.dark .oc-node.lead em { color: rgba(27, 22, 17, 0.66); }
+.oc-node.vice { border-color: var(--gold); color: var(--gold); }
+.oc-link {
+  width: 1px; height: 22px; margin: 0 auto;
+  background: var(--line-2);
+}
+.oc-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  position: relative;
+  padding-top: 22px;
+}
+.oc-row::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 8.33%; right: 8.33%;
+  height: 1px;
+  background: var(--line-2);
+}
+.oc-row .oc-node { min-width: 0; width: 100%; font-size: 0.82rem; padding: 9px 6px; position: relative; }
+.oc-row .oc-node::before {
+  content: "";
+  position: absolute;
+  top: -22px; left: 50%;
+  width: 1px; height: 22px;
+  background: var(--line-2);
+}
+@media (max-width: 760px) {
+  .oc-row { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .oc-row::before { display: none; }
+  .oc-row .oc-node::before { display: none; }
+}
