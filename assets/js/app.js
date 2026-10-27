@@ -2088,6 +2088,28 @@
     }
   }
 
+  function renderBigTimeline() {
+    var box = $("#bigTimeline");
+    if (!box) return;
+    var items = [];
+    (D.site.timeline || []).forEach(function (t) {
+      items.push({ date: t.year, title: t.title, desc: t.desc, kind: "沿革" });
+    });
+    (window.XB_ACTIVITIES || []).forEach(function (a2) {
+      items.push({ date: a2.date, title: a2.title.split("——").pop(), desc: "活动档案 · 全文与照片", kind: "活动", id: a2.id });
+    });
+    (D.site.honors || []).forEach(function (h) {
+      if (/^\d{4}$/.test(h.year)) items.push({ date: h.year, title: h.title, desc: h.org, kind: "荣誉" });
+    });
+    items.sort(function (x, y) { return String(y.date).localeCompare(String(x.date)); });
+    box.innerHTML = items.map(function (it) {
+      var link = it.id ? ' · <a href="activity.html?id=' + it.id + '" style="color:var(--gold)">详情</a>' : "";
+      return '<div class="past-item"><div class="past-date">' + esc(it.date) + "</div>" +
+        "<div><h3>" + esc(it.title) + '<span class="tl-kind">' + esc(it.kind) + "</span></h3>" +
+        "<p>" + esc(it.desc) + link + "</p></div></div>";
+    }).join("");
+  }
+
   function renderPeople() {
     var box = $("#peopleList");
     if (!box) return;
@@ -2216,7 +2238,7 @@
     if (page === "search") initSearchPage();
     if (page === "gallery") renderGallery();
     if (page === "activity") initActivityPage();
-    if (page === "about") renderPeople();
+    if (page === "about") { renderPeople(); renderBigTimeline(); }
     if (page === "guide") initGuidePage();
     if (page === "about") initAboutPage();
     if (page === "journal") {

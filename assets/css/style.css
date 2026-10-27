@@ -2621,3 +2621,10 @@ body.dark .oc-node.lead em { color: rgba(27, 22, 17, 0.66); }
   margin-bottom: 8px; display: flex; align-items: center; gap: 10px;
 }
 .ppl-h::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+/* 大事记 kind 标签 */
+.tl-kind {
+  display: inline-block; margin-left: 8px; font-size: 0.66rem; font-weight: 400;
+  letter-spacing: 0.1em; color: var(--gold); border: 1px solid var(--line-2);
+  border-radius: 3px; padding: 0 5px; vertical-align: 2px;
+}
