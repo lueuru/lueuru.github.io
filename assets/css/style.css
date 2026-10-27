@@ -2639,3 +2639,32 @@ body.dark .oc-node.lead em { color: rgba(27, 22, 17, 0.66); }
   content: counter(fl, decimal-leading-zero); position: absolute; left: 14px; top: 10px;
   font-family: var(--serif); font-size: 0.8rem; color: var(--gold); font-weight: 700;
 }
+
+/* v4.0 排版精修：层次、留白、细节质感 */
+.sec { padding-top: clamp(64px, 8vw, 96px); padding-bottom: clamp(64px, 8vw, 96px); }
+.st { margin-bottom: clamp(28px, 4vw, 44px); }
+.st h2 { letter-spacing: 0.06em; }
+.st .desc { font-size: 0.9rem; line-height: 1.95; color: var(--ink-3); }
+h1, h2, h3 { text-wrap: balance; }
+p { text-wrap: pretty; }
+.wk-body > p { line-height: 2.05; margin-bottom: 0.9em; }
+.wk-body > p:first-of-type { margin-top: 0; }
+.guide-card { padding: clamp(22px, 3.4vw, 34px); }
+.guide-card h2 { font-size: 1.06rem; letter-spacing: 0.08em; }
+.org-item { padding: 12px 0; }
+.org-item b { letter-spacing: 0.02em; }
+.past-item h3 { font-size: 0.98rem; }
+.past-date { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+/* 细节点缀：卡片顶部一条极细金线 */
+.wc::after {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px;
+  background: linear-gradient(90deg, var(--red), var(--gold));
+  opacity: 0; transition: opacity .3s;
+}
+.wc:hover::after { opacity: 1; }
+/* 打印：正文专用 */
+@media print {
+  .header, .mnav, .fabs, footer, .feature, .photo-grid, .related { display: none !important; }
+  .wk-body { max-width: none; font-size: 11pt; }
+  a { color: #000; text-decoration: none; }
+}
