@@ -2020,7 +2020,8 @@
       var photos = m.photos || [];
       var show = photos.slice(0, 4);
       return '<div class="mp-item">' +
-        '<div class="mp-head"><b>' + esc(m.date || "") + "</b><span>" + esc(m.title) + "</span>" +
+        '<div class="mp-head"><b>' + esc(m.date || "") + "</b>" +
+        '<a class="mp-title" href="activity.html?id=' + m.url.split("/").pop() + '">' + esc(m.title) + "</a>" +
         '<a href="' + m.url + '" target="_blank" rel="noopener">原文 →</a></div>' +
         (show.length ? '<div class="mp-thumbs">' + show.map(function (src) {
           return '<img src="' + src + '" alt="' + esc(m.title) + '" loading="lazy" data-photo data-cap="' + esc(m.date + " · " + m.title) + '">';
@@ -2029,6 +2030,43 @@
         "</div>";
     }).join("");
     bindLightbox();
+  }
+
+  function renderSchoolNews() {
+    var box = $("#schoolNewsList");
+    if (!box) return;
+    box.innerHTML = (D.site.schoolNews || []).map(function (n) {
+      return '<div class="mp-item">' +
+        '<div class="mp-head"><b>' + esc(n.date) + "</b><span>" + esc(n.title) + "</span>" +
+        '<a href="' + n.url + '" target="_blank" rel="noopener">原文 →</a></div>' +
+        '<div class="mp-thumbs">' + (n.photos || []).map(function (src) {
+          return '<img src="' + src + '" alt="' + esc(n.title) + '" loading="lazy" data-photo data-cap="' + esc(n.date + " · " + n.title) + '">';
+        }).join("") + "</div></div>";
+    }).join("");
+    bindLightbox();
+  }
+
+  function initActivityPage() {
+    var id = new URLSearchParams(location.search).get("id") || "";
+    var list = window.XB_ACTIVITIES || [];
+    var act = list.filter(function (a) { return a.id === id; })[0] || list[0];
+    var box = $("#actBody");
+    if (!act || !box) return;
+    document.title = act.title + " - 新笔文学社";
+    var t = $("#actTitle"); if (t) t.textContent = act.title;
+    var m = $("#actMeta");
+    if (m) m.innerHTML = esc(act.date) + ' · <a href="' + act.url + '" target="_blank" rel="noopener" style="color:var(--gold)">美篇原文 →</a>';
+    box.innerHTML = act.paras.map(function (p) { return "<p>" + esc(p) + "</p>"; }).join("");
+    var src = $("#actSrc");
+    if (src) src.textContent = "本文文字与照片据「新笔文学社」美篇原文整理（" + act.date + "），版权归原作者。";
+    var ph = $("#actPhotos");
+    if (ph) {
+      ph.innerHTML = act.photos.map(function (s2) {
+        return '<figure class="photo-card" data-photo data-cap="' + esc(act.title) + '">' +
+          '<img src="' + s2 + '" alt="' + esc(act.title) + '" loading="lazy"></figure>';
+      }).join("");
+      bindLightbox();
+    }
   }
 
   function renderGallery() {
@@ -2133,13 +2171,14 @@
     if (page === "contest") initContestPage();
     if (page === "search") initSearchPage();
     if (page === "gallery") renderGallery();
+    if (page === "activity") initActivityPage();
     if (page === "guide") initGuidePage();
     if (page === "about") initAboutPage();
     if (page === "journal") {
       loadCloudData().then(function (cloud) { if (cloud) { renderJournal(); } });
     }
 
-    if (page === "index" || page === "work" || page === "journal" || page === "works" || page === "guide" || page === "about" || page === "authors" || page === "issue" || page === "contest" || page === "search" || page === "gallery") {
+    if (page === "index" || page === "work" || page === "journal" || page === "works" || page === "guide" || page === "about" || page === "authors" || page === "issue" || page === "contest" || page === "search" || page === "gallery" || page === "activity") {
       var y = $("#year");
       if (y) y.textContent = new Date().getFullYear();
     }

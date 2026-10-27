@@ -1397,3 +1397,22 @@ window.XB_DATA = {
     for (var i = 1; i <= n; i++) m.photos.push("assets/photos/mp/" + id + "-" + i + ".jpg");
   });
 })();
+
+/* ============================================================
+ * v2.4 校园动态（学校公众号 6 篇，含配图）
+ * 说明：这些是学校层面的报道，非文学社活动，故单列
+ * ============================================================ */
+(function () {
+  var D = window.XB_DATA;
+  D.site.schoolNews = [
+    { date: "2026-10-17", title: "赛场问鼎展雄风，凝心聚力铸师魂", url: "https://mp.weixin.qq.com/s/PMuyOW-qXaQLPFIvsPoAEA", photos: [1, 2, 3] },
+    { date: "2026-09-23", title: "岳阳县二中「校长有约」侧记", url: "https://mp.weixin.qq.com/s/NRhpw4YvXRO2yNjFssFilQ", photos: [1] },
+    { date: "2026-09-19", title: "岳阳县第二中学周报", url: "https://mp.weixin.qq.com/s/fpqtTfxdqs40nVdCkYTGDA", photos: [1, 2, 3] },
+    { date: "2026-08-17", title: "逐梦新程｜2026 级高一新生分班、军训安排通知", url: "https://mp.weixin.qq.com/s/NCq5WcieQTDbPxRrPzIh-w", photos: [1] },
+    { date: "2026-07-17", title: "狮啸江淮，载誉巴陵——北狮队勇夺全国锦标赛第三名纪实", url: "https://mp.weixin.qq.com/s/pYyevl5jyw68VePAjY8eRw", photos: [1, 2] },
+    { date: "2026-01-06", title: "光耀杏坛，爱续华章", url: "https://mp.weixin.qq.com/s/NSG6XDmFRQ6b3uDOn5u3cQ", photos: [1, 2, 3] }
+  ];
+  D.site.schoolNews.forEach(function (n, i) {
+    n.photos = n.photos.map(function (k) { return "assets/photos/wx/wx" + (6 - i) + "-" + k + ".jpg"; });
+  });
+})();
