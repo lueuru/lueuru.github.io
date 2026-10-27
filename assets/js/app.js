@@ -1887,6 +1887,13 @@
       (D.site.glossary || []).forEach(function (g) {
         idx.push({ type: "写作", title: g.term, sub: "文学小词典", text: g.def + " " + g.eg, href: "craft.html" });
       });
+      (window.XB_ACTIVITIES || []).forEach(function (a) {
+        idx.push({
+          type: "活动", title: a.title, sub: a.date + " · 活动档案",
+          text: (a.paras || []).join(" "),
+          href: "activity.html?id=" + a.id
+        });
+      });
       (D.site.reading || []).forEach(function (b) {
         idx.push({ type: "书单", title: b.title, sub: b.author + " · " + b.cat + " · " + b.level, text: b.why, href: "reading.html" });
       });
