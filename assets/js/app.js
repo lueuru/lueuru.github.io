@@ -1,9 +1,4 @@
-/* ============================================================
- * 新笔文学社 · 基础版本 v0.2 —— 交互脚本
- * 纯前端、零框架；动态能力（点赞/收藏/评论/表单/登录）以
- * localStorage 本地演示，作品数据优先拉取社团 Supabase（只读），
- * 失败自动回退本地示例数据。详见 README。
- * ============================================================ */
+
 (function () {
   "use strict";
 
@@ -12,10 +7,8 @@
   var $ = function (s, el) { return (el || document).querySelector(s); };
   var $$ = function (s, el) { return Array.prototype.slice.call((el || document).querySelectorAll(s)); };
 
-  /* 运行时数据：works 可能是本地示例，也可能被远端真实数据替换 */
   var DATA = { works: [], source: "local", remoteTried: false, showDemo: false };
 
-  /* 已发表作品（真实）置顶；示例作品仅在 ?demo=1 时出现 */
   function demoMode() { return new URLSearchParams(location.search).get("demo") === "1"; }
 
   function buildWorks(cloudRows) {
@@ -57,7 +50,6 @@
   var wState = { filter: "all", shown: PAGE_SIZE };
   var curWork = null;
 
-  /* ---------- 本地存储 ---------- */
   var LS = {
     get: function (k, d) {
       try { var v = localStorage.getItem("xb_" + k); return v == null ? d : JSON.parse(v); } catch (e) { return d; }
@@ -66,7 +58,6 @@
     del: function (k) { try { localStorage.removeItem("xb_" + k); } catch (e) {} }
   };
 
-  /* ---------- 工具 ---------- */
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
@@ -95,7 +86,6 @@
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
 
-  /* 演示登录状态 / 云端会话（云端优先） */
   var CLOUD_USER = null;
   function curUser() { return CLOUD_USER || LS.get("user", null); }
   function likes() { return LS.get("likes", []); }
@@ -108,7 +98,6 @@
     return null;
   }
 
-  /* ---------- 作品封面（SVG 生成，替代外链图） ---------- */
   var CAT_HUE = { prose: "#b8964a", poetry: "#8b3a3a", fiction: "#5b7a6a", essay: "#9c6b3f" };
   var CAT_CHAR = { prose: "散", poetry: "诗", fiction: "小", essay: "随" };
 
@@ -132,16 +121,13 @@
       "</svg>";
   }
 
-  /* ============================================================
-   * 远端数据（Supabase 只读）
-   * ============================================================ */
   function normalizeRemoteWork(w) {
     var content = [];
     if (Array.isArray(w.content)) content = w.content;
     else if (typeof w.content === "string") {
       var raw = w.content.trim();
       content = raw.split(/\r?\n\s*\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
-      /* 只有一段且很长时，按单换行再切（兼容只用 \n 分段的正文） */
+      
       if (content.length < 2 && raw.length > 400) {
         content = raw.split(/\r?\n/).map(function (s) { return s.trim(); }).filter(Boolean);
       }
@@ -183,9 +169,6 @@
     }
   }
 
-  /* ============================================================
-   * 云端数据加载（WorkBuddy Cloud）
-   * ============================================================ */
   function applyCloudData(cloud) {
     var corpus = {};
     D.works.forEach(function (w) { corpus[w.title] = w; });
@@ -198,11 +181,11 @@
         return { title: r.title || b.title || "活动", days: b.days || 14, time: b.time || "18:00-20:00", loc: b.loc || "待定", desc: b.desc || "" };
       });
     }
-    /* 教师区只展示公开资料中的辅导教师；云端社员（演示数据）不再覆盖 */
+    
     if (D.site && D.site.advisors && D.site.advisors.length) {
       D.members = D.site.advisors;
     }
-    /* 期号无公开来源：不再采用云端数据（已清空 site_content 的 issue/event/member） */
+    
   }
 
   function loadCloudData() {
@@ -224,7 +207,6 @@
     }).catch(function () { return null; });
   }
 
-  /* 旧站 Supabase（项目已下线，默认关闭；如恢复可在 config.js 打开） */
   function loadRemoteWorks() {
     if (DATA.remoteTried) return Promise.resolve(DATA.source === "remote");
     DATA.remoteTried = true;
@@ -264,9 +246,6 @@
     if (wrap) wrap.innerHTML = "";
   }
 
-  /* ============================================================
-   * 作品列表
-   * ============================================================ */
   function matchWorks() {
     return DATA.works.filter(function (w) {
       if (!w.verified && !demoMode()) return false;
@@ -392,9 +371,6 @@
     }
   }
 
-  /* ============================================================
-   * 作品弹窗（首页）
-   * ============================================================ */
   function openWork(id) {
     var w = workById(id);
     if (!w) { toast("作品不存在或数据尚未加载", "err"); return; }
@@ -421,9 +397,6 @@
     curWork = null;
   }
 
-  /* ============================================================
-   * 评论（本地 + 云端合并，两级盖楼）
-   * ============================================================ */
   var replyTarget = null;
 
   function ckey(c) {
@@ -438,7 +411,6 @@
       String(d.getHours()).padStart(2, "0") + ":" + String(d.getMinutes()).padStart(2, "0");
   }
 
-  /* 把评论整理成「顶层 + 其后代（拍平）」 */
   function commentTree(list) {
     list.forEach(function (c) { c._key = ckey(c); });
     var byKey = {};
@@ -538,7 +510,7 @@
             parentKey: r.parent_id ? ("C:" + r.parent_id) : null
           };
         });
-        /* 云端评论在前（较新），本地里与云端内容重复的不再显示 */
+        
         var seen = {};
         cloudList.forEach(function (c) { seen[c.name + "|" + c.content] = true; });
         var localOnly = local.filter(function (c) { return !seen[c.name + "|" + c.content]; });
@@ -559,7 +531,6 @@
     var text = inp.value.trim();
     var target = replyTarget;
 
-    /* 已登录云端 → 直接写库（保留盖楼关系），随后重拉 */
     if (window.XB_CLOUD && XB_CLOUD.isReady() && u.cloud) {
       XB_CLOUD.markInteraction(wid, "comment", true, {
         content: text,
@@ -574,7 +545,6 @@
       return;
     }
 
-    /* 本地评论 */
     var all = LS.get("comments", {});
     var key = String(wid);
     if (!all[key]) all[key] = [];
@@ -590,9 +560,6 @@
     toast("评论已发表（本机保存，登录云端账号可同步）");
   }
 
-  /* ============================================================
-   * 个人主页（演示）
-   * ============================================================ */
   function showProfile() {
     var u = curUser();
     if (!u) return;
@@ -625,9 +592,6 @@
     document.body.style.overflow = "hidden";
   }
 
-  /* ============================================================
-   * 搜索下拉
-   * ============================================================ */
   function bindSearch() {
     var inp = $("#searchInput"), res = $("#searchR");
     if (!inp || !res) return;
@@ -662,9 +626,6 @@
     });
   }
 
-  /* ============================================================
-   * 近期活动（日期动态推算 + 倒计时）
-   * ============================================================ */
   function renderEvents() {
     var box = $("#eventsList");
     if (!box) return;
@@ -691,9 +652,6 @@
     });
   }
 
-  /* ============================================================
-   * 社员 / 门户 / 文案 / 联系
-   * ============================================================ */
   function renderMembers() {
     var box = $("#membersGrid");
     if (!box) return;
@@ -738,9 +696,6 @@
     set("#copyLine", D.site.copyright + " | 基础版本 v0.2 · 本地演示");
   }
 
-  /* ============================================================
-   * 表单（本地演示提交）
-   * ============================================================ */
   function bindForm(formSel, okSel, key, okMsg, btnLabel, toCloud) {
     var form = $(formSel);
     if (!form) return;
@@ -763,7 +718,7 @@
         form.reset();
         if (btn) { btn.disabled = false; btn.textContent = btnLabel; }
         toast(okMsg);
-        /* 同步到社团云端作品库 */
+        
         if (toCloud && window.XB_CLOUD && XB_CLOUD.isReady()) {
           var rec = toCloudRecord(key, data);
           XB_CLOUD.submit(rec).then(function (r) {
@@ -796,9 +751,6 @@
     };
   }
 
-  /* ============================================================
-   * 二维码弹窗
-   * ============================================================ */
   function openQr(type) {
     var isWx = type === "wechat";
     var seed = isWx ? 7 : 13;
@@ -818,9 +770,6 @@
     document.body.style.overflow = "hidden";
   }
 
-  /* ============================================================
-   * 用户菜单
-   * ============================================================ */
   function renderUserUI() {
     var u = curUser();
     var d = $("#userDropdown");
@@ -849,9 +798,6 @@
     });
   }
 
-  /* ============================================================
-   * 分享与登录回跳
-   * ============================================================ */
   function shareWork(w) {
     var url = location.origin + location.pathname + "?id=" + w.id;
     if (navigator.share) {
@@ -867,7 +813,6 @@
     return "login.html?next=" + encodeURIComponent(location.pathname + location.search);
   }
 
-  /* 作品页结构化数据（CreativeWork） */
   function injectWorkLD(w) {
     var old = document.getElementById("ld-work");
     if (old) old.remove();
@@ -889,9 +834,6 @@
     document.head.appendChild(s);
   }
 
-  /* ============================================================
-   * 作品详情页（work.html）
-   * ============================================================ */
   function renderWorkPage() {
     var rawId = new URLSearchParams(location.search).get("id") || "";
     var id = /^\d+$/.test(rawId) ? parseInt(rawId, 10) : rawId;
@@ -969,9 +911,6 @@
     });
   }
 
-  /* ============================================================
-   * 社刊往期页（journal.html）
-   * ============================================================ */
   function renderJournal() {
     var j = D.journal;
     var intro = $("#journalIntro");
@@ -997,9 +936,6 @@
     observeReveals();
   }
 
-  /* ============================================================
-   * 滚动 / 导航 / 主题
-   * ============================================================ */
   function on(id, ev, fn) { var el = $(id); if (el) el.addEventListener(ev, fn); }
 
   function bindChrome() {
@@ -1072,7 +1008,6 @@
     applyDark();
   }
 
-  /* ---------- 滚动揭示 ---------- */
   var io = null;
   if ("IntersectionObserver" in window) {
     io = new IntersectionObserver(function (entries) {
@@ -1091,7 +1026,6 @@
     });
   }
 
-  /* ---------- 幕头动效 ---------- */
   function bindHero() {
     var hp = $("#herop");
     if (hp) {
@@ -1120,7 +1054,6 @@
     }
   }
 
-  /* ---------- 弹窗与全局委托 ---------- */
   function bindModals() {
     on("#modalClose", "click", closeModal);
     var am = $("#articleModal");
@@ -1154,7 +1087,6 @@
     });
   }
 
-  /* 点赞 / 收藏：全局委托（列表、弹窗、详情页共用） */
   function bindWorkActions() {
     document.addEventListener("click", function (e) {
       var lb = e.target.closest(".like-btn");
@@ -1184,11 +1116,6 @@
     });
   }
 
-  /* ============================================================
-   * 本地管理覆盖层（由 admin.html 维护，全站生效）
-   * useLocal = true 时进入“本地管理模式”：作品/活动/社员/社刊
-   * 以本地编辑为准，不再拉取远端。
-   * ============================================================ */
   function applyOverlay() {
     var ov = LS.get("overlay", null);
     if (!ov) return;
@@ -1211,9 +1138,6 @@
     if (ov.journal) D.journal.issues = ov.journal;
   }
 
-  /* ============================================================
-   * v0.6 扩充区块渲染（首页 / 作品库 / 指南 / 关于）
-   * ============================================================ */
   function renderIndexSections() {
     var st = $("#statsStrip");
     if (st) st.innerHTML = (D.site.stats || []).map(function (s) {
@@ -1252,13 +1176,10 @@
       return "<div class='quote-card'><p>" + esc(q.text) + "</p><cite>—— " + esc(q.from) + "</cite></div>";
     }).join("");
 
-    /* 往期回顾已并入「活动纪事」，此处不再渲染 */
-
     renderDaily();
     observeReveals();
   }
 
-  /* 作品库（works.html）：筛选 + 排序 + 搜索 + 加载更多 */
   function initWorksPage() {
     var grid = $("#wlibGrid");
     if (!grid) return;
@@ -1320,7 +1241,6 @@
     });
   }
 
-  /* 投稿指南（guide.html） */
   function initGuidePage() {
     var g = D.site.guide;
     if (!g) return;
@@ -1351,7 +1271,6 @@
     }).join("");
   }
 
-  /* 关于（about.html） */
   function initAboutPage() {
     var lead = $("#aboutLead");
     if (lead) lead.textContent = D.site.intro;
@@ -1367,7 +1286,6 @@
     renderIndexSections();
   }
 
-  /* 今日诗签 + 今日推荐（按日期轮换） */
   function renderDaily() {
     var daily = $("#dailyStrip");
     if (!daily) return;
@@ -1380,7 +1298,6 @@
       (w ? "<a class='daily-work' href='work.html?id=" + w.id + "'>今日推荐：《" + esc(w.title) + "》→</a>" : "");
   }
 
-  /* 作者名录 / 作者主页 */
   var HUES = ["#8b3a3a", "#b8964a", "#5b7a6a", "#9c6b3f", "#33506b", "#6e2f2a"];
 
   function authorIndex() {
@@ -1444,14 +1361,14 @@
       $("#authorSub").innerHTML = "作者主页 · 新笔文学社";
       $("#awTitle").textContent = "全部作品";
       $("#awGrid").innerHTML = a.works.map(workCard).join("");
-      /* 活动原文中的提及 */
+      
       var mentions = [];
       (window.XB_ACTIVITIES || []).forEach(function (ac) {
         (ac.paras || []).forEach(function (pp) {
           if (pp.indexOf(a.name) > -1) mentions.push({ act: ac, sent: pp });
         });
       });
-      /* 发表名录交叉引用 */
+      
       var catRows = (D.site.catalog || []).filter(function (c) { return (c.author || "").indexOf(a.name) > -1; });
       var mh = $("#authorMentions");
       if (mh) mh.parentNode.removeChild(mh);
@@ -1486,7 +1403,6 @@
     loadCloudData().then(function () { paint(); });
   }
 
-  /* 社刊期号页 */
   function initIssuePage() {
     var no = parseInt(new URLSearchParams(location.search).get("no"), 10);
     var idx = 0;
@@ -1519,7 +1435,7 @@
 
       renderIssueSpread(is);
       var pw = $("#issuePrefaceWrap");
-      if (!pw) { /* 已改为导读跨页 */ } else if (idx === 0 && D.site.preface) {
+      if (!pw) {  } else if (idx === 0 && D.site.preface) {
         pw.style.display = "block";
         $("#issuePreface").innerHTML = D.site.preface.paragraphs.map(function (t) {
           return "<p style='text-indent:2em;line-height:2;color:var(--ink-2);margin-bottom:.8em'>" + esc(t) + "</p>";
@@ -1551,10 +1467,6 @@
     loadCloudData().then(function () { paint(); });
   }
 
-
-  /* ============================================================
-   * v0.8 深度内容：编辑推荐 / 数据条 / 写作课 / 书单
-   * ============================================================ */
   var PICK_NOTES = [
     "这一篇的细节是「看见」过的，不是想出来的。",
     "读完会想给家里打个电话的那种文章。",
@@ -1685,10 +1597,6 @@
     paint();
   }
 
-
-  /* ============================================================
-   * v1.0 专题 / 文学地理 / 刊墙 / 内页试读
-   * ============================================================ */
   function renderTopics() {
     var box = $("#topicBox");
     if (!box) return;
@@ -1772,10 +1680,6 @@
       "</div>";
   }
 
-
-  /* ============================================================
-   * v1.1 征文大赛（线上投票）
-   * ============================================================ */
   function initContestPage() {
     var c = D.site && D.site.contest;
     if (!c) return;
@@ -1877,10 +1781,6 @@
     loadVotes();
   }
 
-
-  /* ============================================================
-   * v1.2 全站搜索
-   * ============================================================ */
   function initSearchPage() {
     var input = $("#searchInput");
     if (!input) return;
@@ -2015,10 +1915,6 @@
     observeReveals();
   }
 
-
-  /* ============================================================
-   * v1.5 活动现场相册
-   * ============================================================ */
   function lightboxOpen(src, cap) {
     var lb = $("#lightbox");
     if (!lb) return;
@@ -2181,9 +2077,6 @@
     observeReveals();
   }
 
-  /* v4.1 版块索引 / 面包屑 / 数据看板 */
-  /* v4.4 标签索引 */
-  /* v4.5 大事记页 */
   function initTimelinePage() {
     var box = $("#tlList");
     if (!box) return;
@@ -2270,7 +2163,6 @@
     if (note) note.textContent = (sec.source || "") + "；共 " + sec.total + " 个版块，尚有 " + sec.pending + " 个待补。";
   }
 
-  /* v4.6 浮动目录（阅读侧栏） */
   function buildTOC() {
     if (document.querySelector(".toc-float")) return;
     var heads = Array.prototype.slice.call(document.querySelectorAll("h2")).filter(function (h) {
@@ -2311,7 +2203,6 @@
     main.parentNode.insertBefore(c, main);
   }
 
-  /* v5.3 全站导览卡 */
   function renderNavCards() {
     var box = $("#navGrid");
     if (!box) return;
@@ -2369,9 +2260,6 @@
     bindLightbox();
   }
 
-  /* ============================================================
-   * 启动
-   * ============================================================ */
   function init() {
     DATA.works = buildWorks();
     applyOverlay();
@@ -2384,7 +2272,6 @@
     bindModals();
     observeReveals();
 
-    /* 云端会话检查（登录态） */
     if (window.XB_CLOUD) {
       XB_CLOUD.load()
         .then(function () { return XB_CLOUD.session(); })
@@ -2434,7 +2321,7 @@
             toast("已连接社团云端作品库");
             return;
           }
-          /* 云端不可达 → 尝试旧站 Supabase → 都没有则用本地示例 */
+          
           loadRemoteWorks().then(function (remote) {
             renderWorks(true);
             setSourceBadge();

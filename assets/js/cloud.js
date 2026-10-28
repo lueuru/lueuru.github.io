@@ -1,19 +1,13 @@
-/* ============================================================
- * 新笔文学社 · 基础版本 —— 云服务数据层
- * 统一封装 WorkBuddy Cloud（PostgREST 风格）的读写与认证，
- * 任何一步失败都返回 null / error，由上层回退到本地数据。
- * ============================================================ */
+
 window.XB_CLOUD = (function () {
   "use strict";
 
-  /* 配置惰性读取：config.js 可能在 cloud.js 之后加载，不能在加载时快照 */
   function CFG() { return window.XB_CONFIG || {}; }
 
   var client = null;
   var sdkPromise = null;
   var state = { ready: false, reason: "", signedIn: false, user: null };
 
-  /* ---------- SDK 装载（CDN 形式，失败即离线模式） ---------- */
   function loadSdk() {
     if (sdkPromise) return sdkPromise;
     sdkPromise = new Promise(function (resolve) {
@@ -23,7 +17,7 @@ window.XB_CLOUD = (function () {
         return resolve(false);
       }
       if (window.WorkBuddyCloud) return resolve(true);
-      /* 本地自托管优先（无 CDN 依赖），CDN 作为兜底 */
+      
       var sources = [
         "assets/vendor/workbuddy-cloud.js",
         "https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"
@@ -86,7 +80,6 @@ window.XB_CLOUD = (function () {
   function db() { var c = get(); return c ? c.database : null; }
   function auth() { var c = get(); return c ? c.auth : null; }
 
-  /* ---------- 读 ---------- */
   async function fetchWorks() {
     var d = db(); if (!d) return null;
     var r = await d.from("works").select("*").order("id", { ascending: true });
@@ -131,7 +124,6 @@ window.XB_CLOUD = (function () {
     return r.data || [];
   }
 
-  /* ---------- 写 ---------- */
   async function saveWork(row) {
     var d = db(); if (!d) return { error: { message: "云端不可用" } };
     var payload = {
@@ -182,7 +174,6 @@ window.XB_CLOUD = (function () {
     return await d.from("interactions").insert(row).select();
   }
 
-  /* ---------- 认证 ---------- */
   async function session() {
     var a = auth(); if (!a) return null;
     var r = await a.getSession();

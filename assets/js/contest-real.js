@@ -1,4 +1,4 @@
-/* 征文：真实「光华杯」（独立加载，确保覆盖生效） */
+
 (function () {
   if (!window.XB_DATA) return;
   window.XB_DATA.site.contest = {

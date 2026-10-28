@@ -1,7 +1,4 @@
-/* ============================================================
- * 新笔文学社 · 基础版本 v0.1
- * 风格：宣纸 · 朱砂 · 鎏金 —— 自包含，零外部依赖
- * ============================================================ */
+
 
 :root {
   --bg: #faf7f0;
@@ -67,7 +64,6 @@ svg.ic-f { fill: currentColor; stroke: none; }
 .mact:hover { color: var(--red); }
 ::selection { background: rgba(139, 58, 58, 0.22); }
 
-/* 跳转到主要内容（键盘可访问性） */
 .skip-link {
   position: absolute;
   top: -48px;
@@ -82,7 +78,6 @@ svg.ic-f { fill: currentColor; stroke: none; }
 }
 .skip-link:focus { top: 0; }
 
-/* 键盘焦点可见 */
 :focus-visible {
   outline: 2px solid var(--red);
   outline-offset: 2px;
@@ -90,7 +85,6 @@ svg.ic-f { fill: currentColor; stroke: none; }
 }
 body.dark :focus-visible { outline-color: var(--gold); }
 
-/* 纸纹 */
 body::before {
   content: "";
   position: fixed;
@@ -104,7 +98,6 @@ body::before {
 }
 body.dark::before { opacity: 0.25; }
 
-/* 阅读进度条 */
 .pbar {
   position: fixed;
   top: 0; left: 0;
@@ -114,9 +107,6 @@ body.dark::before { opacity: 0.25; }
   z-index: 1001;
 }
 
-/* ============================================================
- * 头部导航
- * ============================================================ */
 .header {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -249,9 +239,6 @@ body.dark .mnav { background: rgba(22, 18, 14, 0.98); }
 .mnav.open a:nth-child(8) { transition-delay: 0.4s; }
 .mnav a:hover { color: var(--red); }
 
-/* ============================================================
- * 幕头 Hero
- * ============================================================ */
 .hero {
   position: relative;
   min-height: calc(100vh - var(--head-h));
@@ -328,9 +315,6 @@ body.dark .hc .seal-row span { color: var(--gold); border-color: var(--gold); }
 }
 @keyframes fu { to { opacity: 1; transform: translateY(0); } }
 
-/* ============================================================
- * 区块通用
- * ============================================================ */
 .sec { position: relative; z-index: 1; padding: clamp(56px, 8vw, 88px) 16px; }
 .sec.bw { background: var(--card); }
 .sec.bp { background: var(--bg); }
@@ -386,7 +370,6 @@ body.dark .btn-d:hover { background: var(--red); color: #fff; }
 body.dark .btn-l { color: var(--ink); }
 body.dark .btn-l:hover { background: var(--ink); color: var(--bg); }
 
-/* 滚动揭示 */
 .rv, .rl, .rr, .rs { opacity: 0; transition: opacity 0.7s var(--ease), transform 0.7s var(--ease); }
 .rv { transform: translateY(30px); }
 .rl { transform: translateX(-30px); }
@@ -398,9 +381,6 @@ body.dark .btn-l:hover { background: var(--ink); color: var(--bg); }
 .d3 { transition-delay: 0.3s; }
 .d4 { transition-delay: 0.4s; }
 
-/* ============================================================
- * 关于我们
- * ============================================================ */
 .ag { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 5vw, 48px); align-items: center; }
 .ag p { margin-bottom: 14px; color: var(--ink-2); font-size: 0.98rem; }
 .art-panel {
@@ -430,9 +410,6 @@ body.dark .art-panel svg { color: var(--gold); }
   letter-spacing: 2px;
 }
 
-/* ============================================================
- * 作品展示
- * ============================================================ */
 .sw { position: relative; max-width: 480px; margin: 0 auto 30px; }
 .sw input {
   width: 100%;
@@ -522,9 +499,6 @@ body.dark .wcb h3 { color: var(--gold); }
 .empty-grid { text-align: center; color: var(--ink-3); grid-column: 1 / -1; padding: 60px 20px; font-family: var(--kai); }
 #loadMoreWrap { text-align: center; margin-top: 28px; }
 
-/* ============================================================
- * 近期活动
- * ============================================================ */
 .el { display: flex; flex-direction: column; gap: 18px; max-width: 720px; margin: 0 auto; }
 .ec {
   display: flex;
@@ -570,9 +544,6 @@ body.dark .cdw .val { color: var(--gold); }
 .cdw .lbl { font-size: 0.68rem; color: var(--ink-3); }
 .ev-note { text-align: center; font-size: 0.78rem; color: var(--ink-3); margin-top: 18px; }
 
-/* ============================================================
- * 社员风采
- * ============================================================ */
 .mg { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 20px; }
 .mc {
   background: var(--card);
@@ -616,9 +587,6 @@ body.dark .mrole { color: var(--gold); }
 .mq { color: var(--ink-3); font-size: 0.85rem; font-style: italic; }
 .mbio { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line-2); font-size: 0.8rem; color: var(--ink-3); }
 
-/* ============================================================
- * 表单卡片（投稿 / 加入申请）
- * ============================================================ */
 .fc {
   background: var(--cream);
   padding: clamp(24px, 4vw, 36px);
@@ -663,9 +631,6 @@ body.dark .fc h3 { color: var(--gold); }
 }
 body.dark .fok { color: #8fb8a3; }
 
-/* ============================================================
- * 文学网站入口
- * ============================================================ */
 .pg { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 16px; }
 .pc {
   background: var(--card);
@@ -697,9 +662,6 @@ body.dark .pc h3 { color: var(--gold); }
 .pc .lt { font-weight: 700; font-size: 0.78rem; color: var(--ink-2); }
 .pc:hover .lt { color: var(--red); }
 
-/* ============================================================
- * 联系我们
- * ============================================================ */
 .cg { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(28px, 5vw, 44px); align-items: start; }
 .ci h3 { margin-bottom: 10px; font-size: 1.15rem; }
 .ci > p { color: var(--ink-2); margin-bottom: 20px; font-size: 0.92rem; }
@@ -724,9 +686,6 @@ body.dark .pc h3 { color: var(--gold); }
 body.dark .cit a { color: var(--gold); }
 .cit a:hover { text-decoration: underline; }
 
-/* ============================================================
- * 页脚
- * ============================================================ */
 footer {
   background: #1c1814;
   color: #d4c8b0;
@@ -754,7 +713,6 @@ footer .tl { font-size: 0.82rem; letter-spacing: 3px; color: var(--ink-3); margi
 .fsoc svg { width: 16px; height: 16px; }
 footer .copy { border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 16px; font-size: 0.76rem; color: var(--ink-3); }
 
-/* 浮动按钮 */
 .btop, .dkbtn {
   position: fixed;
   border: none;
@@ -791,9 +749,6 @@ footer .copy { border-top: 1px solid rgba(255, 255, 255, 0.06); padding-top: 16p
 .dkbtn:hover { transform: scale(1.1); }
 .dkbtn svg { width: 16px; height: 16px; }
 
-/* ============================================================
- * 弹窗
- * ============================================================ */
 .modal {
   position: fixed;
   inset: 0;
@@ -900,7 +855,6 @@ body.dark .modal-box h2 { color: var(--gold); }
 .cmt-login-hint a { color: var(--red); font-weight: 600; }
 body.dark .cmt-login-hint a { color: var(--gold); }
 
-/* 二维码弹窗 */
 .qr-pattern {
   width: 150px; height: 150px;
   margin: 0 auto 14px;
@@ -916,7 +870,6 @@ body.dark .cmt-login-hint a { color: var(--gold); }
 .qr-pattern i { background: transparent; border-radius: 1px; }
 .qr-pattern i.b { background: #1c1814; }
 
-/* 轻提示 */
 .toast {
   position: fixed;
   top: 16px; right: 16px;
@@ -935,9 +888,6 @@ body.dark .cmt-login-hint a { color: var(--gold); }
 .toast-ok { background: var(--green); }
 .toast-err { background: var(--red); }
 
-/* ============================================================
- * 登录页
- * ============================================================ */
 .login-page {
   min-height: 100vh;
   display: grid;
@@ -984,9 +934,6 @@ body.dark .cmt-login-hint a { color: var(--gold); }
 .login-back { display: block; text-align: center; margin-top: 18px; font-size: 0.84rem; color: var(--ink-3); }
 .login-back:hover { color: var(--red); }
 
-/* ============================================================
- * 响应式
- * ============================================================ */
 @media (max-width: 1024px) {
   .wg { grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
   .mg { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
@@ -1025,10 +972,6 @@ body.dark .cmt-login-hint a { color: var(--gold); }
   html { scroll-behavior: auto; }
 }
 
-/* ============================================================
- * v0.2 新增：数据源徽标 / 骨架屏 / 点赞收藏按钮基线 /
- *          作品详情页 / 社刊往期页 / 404 页
- * ============================================================ */
 .src-badge {
   display: inline-block;
   vertical-align: middle;
@@ -1056,7 +999,6 @@ body.dark .cmt-login-hint a { color: var(--gold); }
 }
 @keyframes pulse { 50% { opacity: 0.3; } }
 
-/* 骨架屏 */
 .sk-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius-lg); overflow: hidden; }
 .sk-art { aspect-ratio: 4 / 3; }
 .sk-line { height: 14px; margin: 14px 20px 0; border-radius: 4px; }
@@ -1068,7 +1010,6 @@ body.dark .cmt-login-hint a { color: var(--gold); }
 }
 @keyframes shimmer { to { background-position: -200% 0; } }
 
-/* 点赞 / 收藏按钮（列表、弹窗、详情页共用） */
 .like-btn, .bookmark-btn {
   display: inline-flex;
   align-items: center;
@@ -1091,7 +1032,6 @@ body.dark .cmt-login-hint a { color: var(--gold); }
 .works-all { text-align: center; color: var(--ink-3); font-size: 0.85rem; margin: 18px 0 0; }
 .cmt-empty { color: var(--ink-3); font-size: 0.85rem; padding: 6px 0; }
 
-/* 个人主页弹窗 */
 .pf-head { text-align: center; padding: 16px 0 6px; }
 .pf-av {
   width: 72px; height: 72px;
@@ -1112,12 +1052,10 @@ body.dark .pf-stats strong { color: var(--gold); }
 .pf-stats small { color: var(--ink-3); }
 .pf-note { font-size: 0.78rem; color: var(--ink-3); margin-top: 8px; }
 
-/* 二维码弹窗文案 */
 .qr-title { color: var(--red); margin-bottom: 14px; font-size: 1.05rem; }
 body.dark .qr-title { color: var(--gold); }
 .qr-desc { font-size: 0.85rem; color: var(--ink-2); }
 
-/* 作品详情页 */
 .wk { max-width: 780px; margin: 0 auto; padding: 34px 20px 70px; position: relative; z-index: 1; }
 .wk-crumb { font-size: 13px; color: var(--ink-3); margin-bottom: 26px; }
 .wk-crumb a { text-decoration: none; }
@@ -1139,7 +1077,6 @@ body.dark .qr-title { color: var(--gold); }
 .wk-related h3::before { content: ""; width: 5px; height: 16px; background: var(--gold); }
 .wk-related .shelf { border-bottom: 3px solid var(--line); }
 
-/* 社刊往期页 */
 .journal-hero { position: relative; z-index: 1; padding-top: 20px; }
 .jlist {
   max-width: 780px;
@@ -1184,7 +1121,6 @@ body.dark .jno-n { color: var(--gold); }
 .jp-p { color: var(--gold); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
 .jdl { cursor: pointer; }
 
-/* 404 */
 .nf { min-height: 60vh; display: grid; place-items: center; padding: 60px 20px; position: relative; z-index: 1; text-align: center; }
 .nf-code { font-size: clamp(4rem, 14vw, 7rem); font-weight: 900; color: var(--red); line-height: 1; margin: 0; letter-spacing: 0.1em; }
 body.dark .nf-code { color: var(--gold); }
@@ -1199,12 +1135,10 @@ body.dark .nf-code { color: var(--gold); }
   .wk-nav .btn { max-width: 100%; }
 }
 
-/* 分享按钮 */
 .share-btn { display: inline-flex; align-items: center; gap: 6px; background: none; border: none; padding: 0; margin: 0; font-family: inherit; font-size: 0.9rem; color: var(--ink-2); cursor: pointer; transition: color 0.3s; }
 .share-btn:hover { color: var(--gold); }
 .share-btn svg { width: 15px; height: 15px; }
 
-/* 打印样式：作品页只印正文 */
 @media print {
   body::before, .header, .mnav, .pbar, .site-foot, footer, .btop, .dkbtn,
   .wk-crumb, .wk-art, .wk-acts, .wk-nav, .wk-related, #comments-section,
@@ -1216,12 +1150,8 @@ body.dark .nf-code { color: var(--gold); }
   .wk-title { font-size: 18pt; }
 }
 
-/* ============================================================
- * v0.4 新增：内容管理后台（admin.html）
- * ============================================================ */
 .ad { max-width: 980px; margin: 0 auto; padding: 36px 20px 80px; position: relative; z-index: 1; }
 
-/* 未登录门禁 */
 .ad-gate { min-height: 60vh; place-items: center; text-align: center; }
 .ad-gate-box {
   background: var(--card);
@@ -1235,7 +1165,6 @@ body.dark .nf-code { color: var(--gold); }
 .ad-gate-box h2 { font-size: 1.3rem; margin-bottom: 8px; }
 .ad-gate-box p { color: var(--ink-3); font-size: 0.88rem; margin-bottom: 22px; }
 
-/* 头部 */
 .ad-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
 .ad-head h1 { font-size: 1.6rem; letter-spacing: 0.08em; }
 .ad-sub { font-size: 0.82rem; color: var(--ink-3); margin-top: 4px; }
@@ -1243,7 +1172,6 @@ body.dark .nf-code { color: var(--gold); }
 .ad-mode { font-size: 0.82rem; color: var(--ink-3); }
 .ad-mode strong { color: var(--gold); }
 
-/* 标签页 */
 .ad-tabs { display: flex; gap: 6px; flex-wrap: wrap; border-bottom: 2px solid var(--line); padding-bottom: 0; margin-bottom: 24px; }
 .ad-tabs button {
   border: none;
@@ -1265,11 +1193,9 @@ body.dark .ad-tabs button.on { color: var(--gold); border-bottom-color: var(--go
 .ad-panel { display: none; }
 .ad-panel.on { display: block; }
 
-/* 工具栏 */
 .ad-toolbar { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
 .ad-count { font-size: 0.82rem; color: var(--ink-3); }
 
-/* 作品表格 */
 .ad-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); background: var(--card); }
 .ad-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; min-width: 640px; }
 .ad-table th {
@@ -1289,7 +1215,6 @@ body.dark .ad-tabs button.on { color: var(--gold); border-bottom-color: var(--go
 .ad-ops { white-space: nowrap; }
 .ad-empty { text-align: center; color: var(--ink-3); padding: 26px; font-family: var(--kai); }
 
-/* 小按钮 */
 .ad-mini {
   font-family: inherit;
   font-size: 0.78rem;
@@ -1305,7 +1230,6 @@ body.dark .ad-tabs button.on { color: var(--gold); border-bottom-color: var(--go
 .ad-mini:hover { border-color: var(--ink); color: var(--ink); }
 .ad-mini.danger:hover { border-color: var(--red); color: var(--red); background: rgba(139, 58, 58, 0.06); }
 
-/* 编辑卡片（活动/社员/社刊） */
 .ad-item {
   background: var(--card);
   border: 1px solid var(--line);
@@ -1341,13 +1265,11 @@ body.dark .ad-tabs button.on { color: var(--gold); border-bottom-color: var(--go
 .ad-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
 .ad-item input[type="color"] { padding: 4px; height: 36px; cursor: pointer; }
 
-/* 数据页 */
 .ad-data { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 24px; }
 .ad-data h3 { font-size: 1.02rem; margin-bottom: 6px; }
 .ad-tip { font-size: 0.84rem; color: var(--ink-3); margin-bottom: 14px; }
 .ad-rec { font-size: 0.85rem; padding: 9px 12px; background: var(--bg-2); border-radius: 8px; margin-bottom: 8px; color: var(--ink-2); }
 
-/* 作品编辑器（右侧滑出） */
 .ad-editor-mask {
   position: fixed;
   inset: 0;
@@ -1389,9 +1311,6 @@ body.dark .ad-tabs button.on { color: var(--gold); border-bottom-color: var(--go
   .ad-tabs button { padding: 9px 12px; font-size: 0.88rem; }
 }
 
-/* ============================================================
- * v0.5：登录页（云认证）与后台云状态
- * ============================================================ */
 .tab-pane { display: none; }
 .tab-pane.on { display: block; }
 .code-row { display: flex; gap: 8px; align-items: flex-end; }
@@ -1422,12 +1341,6 @@ body.dark .ad-tabs button.on { color: var(--gold); border-bottom-color: var(--go
 .ad-dot.on { background: var(--green); box-shadow: 0 0 0 3px rgba(91, 122, 106, 0.18); }
 .ad-dot.warn { background: var(--gold); }
 
-/* ============================================================
- * v0.6：大站化扩充 —— 数据带 / 公告 / 时间轴 / 荣誉 / 诗签
- *           栏目 / 活动回顾 / 作品库 / 投稿指南 / 多列页脚
- * ============================================================ */
-
-/* 数据带 */
 .stats-strip {
   position: relative;
   z-index: 1;
@@ -1462,7 +1375,6 @@ body.dark .ad-tabs button.on { color: var(--gold); border-bottom-color: var(--go
 body.dark .stat b { color: var(--gold); }
 .stat span { font-size: 0.78rem; color: var(--ink-3); letter-spacing: 0.08em; }
 
-/* 公告栏 */
 .notice-bar {
   position: relative;
   z-index: 1;
@@ -1498,7 +1410,6 @@ body.dark .stat b { color: var(--gold); }
 }
 .notice-list time { color: var(--ink-3); font-variant-numeric: tabular-nums; flex: none; font-size: 0.78rem; padding-top: 2px; }
 
-/* 卷首语 */
 .preface {
   position: relative;
   z-index: 1;
@@ -1537,7 +1448,6 @@ body.dark .stat b { color: var(--gold); }
 }
 .preface-sign { text-align: right; font-size: 0.85rem; color: var(--ink-3); letter-spacing: 0.06em; margin-top: 6px; }
 
-/* 时间轴 */
 .timeline { position: relative; margin-top: 8px; padding-left: 26px; }
 .timeline::before {
   content: "";
@@ -1567,7 +1477,6 @@ body.dark .tl-year { color: var(--gold); }
 .tl-title { font-size: 1rem; font-weight: 700; margin: 3px 0 4px; }
 .tl-desc { font-size: 0.86rem; color: var(--ink-3); line-height: 1.8; }
 
-/* 荣誉墙 */
 .honor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
 .honor-item {
   display: flex;
@@ -1585,7 +1494,6 @@ body.dark .tl-year { color: var(--gold); }
 .honor-title { font-size: 0.9rem; font-weight: 700; line-height: 1.5; }
 .honor-org { font-size: 0.76rem; color: var(--ink-3); margin-top: 3px; }
 
-/* 诗签 */
 .quote-strip {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -1601,7 +1509,6 @@ body.dark .tl-year { color: var(--gold); }
 .quote-card p { font-size: 0.92rem; line-height: 1.9; color: var(--ink-2); font-family: var(--kai); }
 .quote-card cite { display: block; margin-top: 10px; font-size: 0.78rem; color: var(--ink-3); font-style: normal; text-align: right; }
 
-/* 栏目 */
 .column-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
 .column-item {
   background: var(--card);
@@ -1614,7 +1521,6 @@ body.dark .tl-year { color: var(--gold); }
 body.dark .column-item h3::before { background: var(--gold); }
 .column-item p { font-size: 0.82rem; color: var(--ink-3); line-height: 1.75; }
 
-/* 活动回顾 */
 .past-list { display: grid; gap: 10px; }
 .past-item {
   display: grid;
@@ -1629,7 +1535,6 @@ body.dark .column-item h3::before { background: var(--gold); }
 .past-item h3 { font-size: 0.95rem; margin-bottom: 4px; }
 .past-item p { font-size: 0.82rem; color: var(--ink-3); line-height: 1.75; }
 
-/* 多列页脚 */
 .foot-cols {
   display: grid;
   grid-template-columns: 1.4fr 1fr 1fr 1fr;
@@ -1644,7 +1549,6 @@ body.dark .column-item h3::before { background: var(--gold); }
 .foot-cols a:hover { opacity: 1; }
 .foot-brand p { font-size: 0.82rem; opacity: 0.6; line-height: 1.9; }
 
-/* 作品库页 */
 .wlib-hero { text-align: center; padding: clamp(28px, 5vw, 44px) 16px 8px; position: relative; z-index: 1; }
 .wlib-hero h1 { font-size: clamp(1.5rem, 4vw, 2.1rem); letter-spacing: 0.1em; }
 .wlib-hero p { color: var(--ink-3); font-size: 0.88rem; margin-top: 8px; }
@@ -1692,7 +1596,6 @@ body.dark .wlib-filters button.on { background: var(--gold); border-color: var(-
 }
 .wlib-more { text-align: center; padding: 30px 0 0; }
 
-/* 投稿指南页 */
 .guide-wrap { max-width: 860px; margin: 0 auto; padding: 20px 22px 80px; position: relative; z-index: 1; }
 .guide-card {
   background: var(--card);
@@ -1731,7 +1634,6 @@ body.dark .guide-step b { background: var(--gold); color: #1b1611; }
 .faq-a { display: none; font-size: 0.88rem; color: var(--ink-3); line-height: 1.9; padding-bottom: 14px; }
 .faq-item.open .faq-a { display: block; }
 
-/* 关于页 */
 .about-wrap { max-width: 960px; margin: 0 auto; padding: 20px 22px 80px; position: relative; z-index: 1; }
 .about-lead { font-size: 1rem; line-height: 2.05; color: var(--ink-2); text-indent: 2em; }
 .about-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 26px; }
@@ -1756,9 +1658,6 @@ body.dark .guide-step b { background: var(--gold); color: #1b1611; }
   .foot-cols { grid-template-columns: 1fr 1fr; gap: 20px; }
 }
 
-/* ============================================================
- * v0.7：作者名录 / 作者页 / 社刊目录 / 今日条 / 评论盖楼
- * ============================================================ */
 .author-wrap { max-width: var(--maxw); margin: 0 auto; padding: 8px 24px 80px; position: relative; z-index: 1; }
 .author-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 14px; }
 .author-card {
@@ -1790,7 +1689,6 @@ body.dark .guide-step b { background: var(--gold); color: #1b1611; }
 .author-stats b { display: block; font-size: 1.15rem; color: var(--red); font-variant-numeric: tabular-nums; }
 body.dark .author-stats b { color: var(--gold); }
 
-/* 社刊目录 */
 .toc { display: grid; gap: 0; }
 .toc-row {
   display: grid; grid-template-columns: 1fr 120px 56px;
@@ -1804,7 +1702,6 @@ body.dark .author-stats b { color: var(--gold); }
 .toc-row a:hover .t { color: var(--red); }
 .toc-type { font-size: .72rem; color: var(--ink-3); border: 1px solid var(--line-2); border-radius: 99px; padding: 1px 8px; margin-left: 8px; }
 
-/* 今日条 */
 .daily-strip {
   position: relative; z-index: 1;
   max-width: var(--maxw); margin: 16px auto 0; padding: 0 24px;
@@ -1817,7 +1714,6 @@ body.dark .daily-tag { color: var(--gold); }
 .daily-work { margin-left: auto; font-size: .8rem; color: var(--gold); white-space: nowrap; }
 .daily-work:hover { text-decoration: underline; }
 
-/* 评论盖楼 */
 .cmt-reply-btn {
   background: none; border: none; font-family: inherit; font-size: .74rem;
   color: var(--ink-3); cursor: pointer; padding: 0; margin-left: 10px;
@@ -1835,12 +1731,6 @@ body.dark .daily-tag { color: var(--gold); }
 .cmt-target.on { display: flex; }
 .cmt-target button { background: none; border: none; color: var(--ink-3); cursor: pointer; font-size: .9rem; }
 
-/* ============================================================
- * v0.8 刊物级视觉：报头 / 章节编号 / 首字下沉 / 编辑推荐
- *           数据条 / 书单 / 写作课 / 访谈 / 词典 / 命题
- * ============================================================ */
-
-/* 报头（masthead） */
 .masthead {
   display: flex; justify-content: center; align-items: center;
   gap: 14px; flex-wrap: wrap;
@@ -1850,7 +1740,6 @@ body.dark .daily-tag { color: var(--gold); }
 }
 .masthead i { display: inline-block; width: 26px; height: 1px; background: var(--line-2); }
 
-/* 章节编号 + 标题层次 */
 body { counter-reset: sec; }
 .sec .st { counter-increment: sec; }
 .sec .st h2 { position: relative; letter-spacing: 0.04em; }
@@ -1868,7 +1757,6 @@ body { counter-reset: sec; }
 .sec .st .tag { letter-spacing: 0.24em; }
 .sec .st .desc { max-width: 560px; margin-left: auto; margin-right: auto; }
 
-/* 首字下沉 */
 .wk-body > p:first-of-type::first-letter,
 .preface-card > p:first-of-type::first-letter {
   float: left;
@@ -1882,7 +1770,6 @@ body { counter-reset: sec; }
 body.dark .wk-body > p:first-of-type::first-letter,
 body.dark .preface-card > p:first-of-type::first-letter { color: var(--gold); }
 
-/* 编辑推荐 */
 .feature {
   display: grid;
   grid-template-columns: 320px 1fr;
@@ -1910,7 +1797,6 @@ body.dark .preface-card > p:first-of-type::first-letter { color: var(--gold); }
   .feature-body { padding: 22px 22px 26px; }
 }
 
-/* 分类分布条 */
 .bars { display: grid; gap: 13px; margin-top: 6px; }
 .bar-row { display: grid; grid-template-columns: 76px 1fr 44px; gap: 14px; align-items: center; font-size: 0.84rem; }
 .bar-track { height: 7px; background: var(--bg-2); border-radius: 99px; overflow: hidden; }
@@ -1919,7 +1805,6 @@ body.dark .preface-card > p:first-of-type::first-letter { color: var(--gold); }
 .bars-wrap { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 22px 24px; margin-top: 22px; }
 .bars-wrap h4 { font-size: 0.8rem; letter-spacing: 0.18em; color: var(--ink-3); margin-bottom: 16px; text-transform: uppercase; }
 
-/* 书单 */
 .book-filters { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
 .book-filters button {
   border: 1px solid var(--line-2); background: var(--card); color: var(--ink-2);
@@ -1949,7 +1834,6 @@ body.dark .preface-card > p:first-of-type::first-letter { color: var(--gold); }
 .book-meta span { border: 1px solid var(--line-2); border-radius: 99px; padding: 0 7px; }
 .book-why { font-size: 0.84rem; color: var(--ink-2); line-height: 1.8; }
 
-/* 写作课 */
 .lesson { border-left: 3px solid var(--gold); padding-left: 20px; margin-bottom: 34px; }
 .lesson:last-child { margin-bottom: 0; }
 .lesson-no { font-size: 0.72rem; letter-spacing: 0.2em; color: var(--gold); font-weight: 700; }
@@ -1962,7 +1846,6 @@ body.dark .preface-card > p:first-of-type::first-letter { color: var(--gold); }
 .tip { font-size: 0.84rem; color: var(--gold); font-family: var(--kai); }
 .tip::before { content: "编辑手记 · "; letter-spacing: 0.1em; }
 
-/* 改稿实录 */
 .rev-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
 .rev-col h4 { font-size: 0.72rem; letter-spacing: 0.2em; color: var(--ink-3); margin-bottom: 10px; }
 .rev-col p { font-size: 0.88rem; line-height: 2; color: var(--ink-2); margin-bottom: 0.7em; text-indent: 2em; }
@@ -1972,7 +1855,6 @@ body.dark .preface-card > p:first-of-type::first-letter { color: var(--gold); }
 .rev-note b { color: var(--gold); font-weight: 700; font-size: 0.78rem; }
 .rev-note span { color: var(--ink-2); }
 
-/* 访谈 */
 .iv-item { padding: 16px 0; border-bottom: 1px dashed var(--line); }
 .iv-item:last-child { border-bottom: none; }
 .iv-q { font-size: 0.96rem; font-weight: 700; margin-bottom: 8px; display: flex; gap: 10px; }
@@ -1984,7 +1866,6 @@ body.dark .preface-card > p:first-of-type::first-letter { color: var(--gold); }
 .iv-head h3 { font-size: 1.05rem; }
 .iv-head p { font-size: 0.82rem; color: var(--ink-3); margin-top: 3px; }
 
-/* 文学小词典 */
 .gl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
 .gl-item { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; }
 .gl-term { font-size: 0.96rem; font-weight: 700; letter-spacing: 0.04em; margin-bottom: 6px; display: flex; align-items: baseline; gap: 8px; }
@@ -1992,7 +1873,6 @@ body.dark .preface-card > p:first-of-type::first-letter { color: var(--gold); }
 .gl-def { font-size: 0.84rem; color: var(--ink-2); line-height: 1.8; }
 .gl-eg { font-size: 0.8rem; color: var(--ink-3); line-height: 1.8; margin-top: 8px; font-family: var(--kai); border-left: 2px solid var(--line-2); padding-left: 10px; }
 
-/* 八法 / 命题 */
 .mt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
 .mt-item { background: var(--bg-2); border-radius: 8px; padding: 12px 14px; }
 .mt-item b { display: block; font-size: 0.9rem; margin-bottom: 4px; }
@@ -2003,7 +1883,6 @@ body.dark .pr-item { border-left-color: var(--gold); }
 .pr-item b { font-size: 0.95rem; display: block; margin-bottom: 5px; }
 .pr-item span { font-size: 0.8rem; color: var(--ink-3); line-height: 1.75; }
 
-/* 阅读页作者栏 */
 .wk-author {
   display: flex; gap: 12px; align-items: center;
   border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
@@ -2019,7 +1898,6 @@ body.dark .pr-item { border-left-color: var(--gold); }
   .rev-note { grid-template-columns: 1fr; gap: 2px; }
 }
 
-/* 品牌标识（中英双语） */
 .logo-t { display: flex; flex-direction: column; line-height: 1.15; }
 .logo-t em {
   font-style: normal;
@@ -2031,9 +1909,6 @@ body.dark .pr-item { border-left-color: var(--gold); }
   white-space: nowrap;
 }
 
-/* ============================================================
- * v0.9 社徽与品牌系统
- * ============================================================ */
 .logo-mark {
   width: 36px; height: 36px;
   border-radius: 7px;
@@ -2068,7 +1943,6 @@ body.dark .pr-item { border-left-color: var(--gold); }
   .logo-mark { width: 32px; height: 32px; }
 }
 
-/* 幕头社徽 */
 .hero-seal {
   width: 78px; height: 78px;
   border-radius: 13px;
@@ -2078,19 +1952,12 @@ body.dark .pr-item { border-left-color: var(--gold); }
 }
 @media (max-width: 560px) { .hero-seal { width: 64px; height: 64px; border-radius: 11px; } }
 
-/* ============================================================
- * v1.0 刊墙 / 内页试读 / 专题 / 文学地理 / 排版精修
- * ============================================================ */
-
-/* 正文行长与断行 */
 .wk-body { max-width: 34em; margin-left: auto; margin-right: auto; }
 .wk-body p { text-align: justify; text-justify: inter-ideograph; }
 .wk-body p + p { margin-top: 0.2em; }
 
-/* 章节标题细线 */
 .sec .st h2 { padding-bottom: 12px; border-bottom: 1px solid var(--line); display: inline-block; }
 
-/* 刊墙 */
 .wall {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
@@ -2113,7 +1980,6 @@ body.dark .pr-item { border-left-color: var(--gold); }
 .wall-meta { margin-top: 10px; font-size: 0.78rem; color: var(--ink-3); display: flex; justify-content: space-between; }
 .wall-meta b { color: var(--ink-2); font-weight: 700; }
 
-/* 内页试读（书页） */
 .spread {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -2137,7 +2003,6 @@ body.dark .pr-item { border-left-color: var(--gold); }
 .page-lead + .page-lead { margin-top: 0.6em; }
 .page-sign { text-align: right; font-size: 0.78rem; color: var(--ink-3); margin-top: 12px; }
 
-/* 专题 */
 .topic {
   background: var(--card);
   border: 1px solid var(--line);
@@ -2159,7 +2024,6 @@ body.dark .pr-item { border-left-color: var(--gold); }
 .topic-work b { display: block; font-size: 0.94rem; margin-bottom: 4px; }
 .topic-work span { font-size: 0.76rem; color: var(--ink-3); }
 
-/* 文学地理 */
 .geo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
 .geo-card {
   background: var(--card);
@@ -2189,7 +2053,6 @@ body.dark .pr-item { border-left-color: var(--gold); }
   .wall { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); gap: 12px; }
 }
 
-/* 刊墙：宽屏排满 6 列 */
 @media (min-width: 1100px) {
   .wall { grid-template-columns: repeat(6, 1fr); }
 }
@@ -2197,9 +2060,6 @@ body.dark .pr-item { border-left-color: var(--gold); }
   .wall { grid-template-columns: repeat(3, 1fr); }
 }
 
-/* ============================================================
- * v1.1 征文大赛
- * ============================================================ */
 .contest-hero {
   text-align: center;
   padding: clamp(34px, 6vw, 56px) 22px 10px;
@@ -2302,9 +2162,6 @@ body.dark .rank-row.top1 .rank-no { color: var(--gold); }
   .contest-grid2 { grid-template-columns: 1fr; }
 }
 
-/* ============================================================
- * v1.2 全站搜索
- * ============================================================ */
 .sbtn {
   display: inline-flex; align-items: center; justify-content: center;
   width: 34px; height: 34px; border-radius: 50%;
@@ -2369,9 +2226,6 @@ body.dark .search-box button { background: var(--gold); color: #1b1611; }
   .search-box button { padding: 8px 16px; }
 }
 
-/* ============================================================
- * v1.3 真实性标注：已发表徽标 / 点评 / 来源 / 演示提示
- * ============================================================ */
 .ver-chip {
   display: inline-block;
   margin-left: 8px;
@@ -2418,9 +2272,6 @@ body.dark .search-box button { background: var(--gold); color: #1b1611; }
 }
 .demo-note b { color: var(--gold); }
 
-/* ============================================================
- * v1.5 活动现场相册
- * ============================================================ */
 .photo-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -2499,7 +2350,7 @@ body.dark .search-box button { background: var(--gold); color: #1b1611; }
   cursor: pointer;
   line-height: 1;
 }
-/* 首页相册条 */
+
 .gallery-strip {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -2514,21 +2365,15 @@ body.dark .search-box button { background: var(--gold); color: #1b1611; }
   .gallery-strip { grid-template-columns: repeat(2, 1fr); }
 }
 
-/* 相册：宽屏 3 列（9 张正好 3×3） */
 @media (min-width: 900px) {
   .photo-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
-
-/* 真实社徽（圆形徽标） */
 .logo-mark { border-radius: 50%; box-shadow: none; }
 .hero-seal { border-radius: 50%; }
 .foot-seal { border-radius: 50%; }
 .seal-lg { border-radius: 50%; background: var(--card); }
 
-/* ============================================================
- * v2.0 组织架构图
- * ============================================================ */
 .orgchart {
   margin: 26px auto 8px;
   max-width: 780px;
@@ -2597,7 +2442,6 @@ body.dark .oc-node.lead em { color: rgba(27, 22, 17, 0.66); }
   .oc-row .oc-node::before { display: none; }
 }
 
-/* 美篇图文档案 */
 .mp-item { border-bottom: 1px dashed var(--line); padding: 18px 0; }
 .mp-item:last-child { border-bottom: none; }
 .mp-head { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; font-size: 0.9rem; }
@@ -2613,7 +2457,6 @@ body.dark .oc-node.lead em { color: rgba(27, 22, 17, 0.66); }
 .mp-more { font-size: 0.76rem; color: var(--ink-3); margin-top: 8px; }
 @media (max-width: 600px) { .mp-thumbs { grid-template-columns: repeat(3, 1fr); } }
 
-/* 人物志分组 */
 .ppl-group { margin-bottom: 18px; }
 .ppl-group:last-child { margin-bottom: 0; }
 .ppl-h {
@@ -2622,14 +2465,12 @@ body.dark .oc-node.lead em { color: rgba(27, 22, 17, 0.66); }
 }
 .ppl-h::after { content: ""; flex: 1; height: 1px; background: var(--line); }
 
-/* 大事记 kind 标签 */
 .tl-kind {
   display: inline-block; margin-left: 8px; font-size: 0.66rem; font-weight: 400;
   letter-spacing: 0.1em; color: var(--gold); border: 1px solid var(--line-2);
   border-radius: 3px; padding: 0 5px; vertical-align: 2px;
 }
 
-/* 会议议程 */
 .flow { counter-reset: fl; display: grid; gap: 8px; margin: 0 0 22px; padding: 0; list-style: none; }
 .flow li {
   counter-increment: fl; position: relative; padding: 10px 14px 10px 46px;
@@ -2640,7 +2481,6 @@ body.dark .oc-node.lead em { color: rgba(27, 22, 17, 0.66); }
   font-family: var(--serif); font-size: 0.8rem; color: var(--gold); font-weight: 700;
 }
 
-/* v4.0 排版精修：层次、留白、细节质感 */
 .sec { padding-top: clamp(64px, 8vw, 96px); padding-bottom: clamp(64px, 8vw, 96px); }
 .st { margin-bottom: clamp(28px, 4vw, 44px); }
 .st h2 { letter-spacing: 0.06em; }
@@ -2655,21 +2495,20 @@ p { text-wrap: pretty; }
 .org-item b { letter-spacing: 0.02em; }
 .past-item h3 { font-size: 0.98rem; }
 .past-date { font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
-/* 细节点缀：卡片顶部一条极细金线 */
+
 .wc::after {
   content: ""; position: absolute; left: 0; right: 0; top: 0; height: 2px;
   background: linear-gradient(90deg, var(--red), var(--gold));
   opacity: 0; transition: opacity .3s;
 }
 .wc:hover::after { opacity: 1; }
-/* 打印：正文专用 */
+
 @media print {
   .header, .mnav, .fabs, footer, .feature, .photo-grid, .related { display: none !important; }
   .wk-body { max-width: none; font-size: 11pt; }
   a { color: #000; text-decoration: none; }
 }
 
-/* 版块索引 */
 .sec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
 .sec-card {
   border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px;
@@ -2678,12 +2517,11 @@ p { text-wrap: pretty; }
 .sec-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(var(--red), var(--gold)); }
 .sec-card b { display: block; font-size: 1rem; letter-spacing: .04em; }
 .sec-card span { font-size: .76rem; color: var(--ink-3); }
-/* 面包屑 */
+
 .crumb { max-width: var(--maxw); margin: 18px auto 0; padding: 0 24px; font-size: .78rem; color: var(--ink-3); }
 .crumb a { color: var(--ink-3); }
 .crumb a:hover { color: var(--red); }
 
-/* 数据看板 */
 .dash { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; background: var(--line);
   border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; max-width: var(--maxw); margin: 26px auto 0; }
 .dash-cell { background: var(--card); padding: 22px 12px; text-align: center; }
@@ -2692,7 +2530,6 @@ body.dark .dash-cell b { color: var(--gold); }
 .dash-cell span { font-size: .72rem; color: var(--ink-3); letter-spacing: .06em; }
 @media (max-width: 760px) { .dash { grid-template-columns: repeat(3, 1fr); } }
 
-/* 标签索引 */
 .tag-group { margin-bottom: 26px; }
 .tag-group h3 { font-size: .74rem; letter-spacing: .2em; color: var(--gold); margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
 .tag-group h3::after { content: ""; flex: 1; height: 1px; background: var(--line); }
@@ -2708,7 +2545,6 @@ body.dark .tag-chip.on { background: var(--gold); border-color: var(--gold); col
 .tag-chip em { font-style: normal; font-size: .7rem; color: var(--ink-3); }
 .tag-chip.on em { color: rgba(255,255,255,.7); }
 
-/* 大事记时间轴 */
 .tl-wrap { max-width: 900px; margin: 0 auto; padding: 10px 24px 80px; }
 .tl-line { position: relative; padding-left: 28px; }
 .tl-line::before {
@@ -2734,7 +2570,6 @@ body.dark .tl-year { color: var(--gold); }
 }
 .tl-foot { text-align: center; margin-top: 10px; }
 
-/* 浮动目录（阅读侧栏） */
 .toc-float {
   position: fixed; right: 22px; top: 120px; width: 168px;
   display: none; flex-direction: column; gap: 2px;
@@ -2756,7 +2591,6 @@ body.dark .toc-float a.on { color: var(--gold); border-left-color: var(--gold); 
 @media (min-width: 1320px) { .toc-float { display: flex; } }
 @media print { .toc-float { display: none !important; } }
 
-/* 全站导览卡 */
 .navgrid {
   display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
   max-width: var(--maxw); margin: 22px auto 0; padding: 0 24px;
@@ -2775,7 +2609,7 @@ body.dark .navcard:hover { border-color: var(--gold); }
 body.dark .navcard em { color: var(--gold); }
 @media (max-width: 900px) { .navgrid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 560px) { .navgrid { grid-template-columns: 1fr; } }
-/* 折叠板块 */
+
 .fold-box {
   max-width: var(--maxw); margin: 0 auto 14px; border: 1px solid var(--line);
   border-radius: var(--radius); background: var(--card); overflow: hidden;

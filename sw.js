@@ -1,6 +1,4 @@
-/* 新笔文学社 · 基础版本 —— Service Worker
- * 策略：导航请求 network-first（保证内容新鲜，离线回退缓存）；
- *       同源静态资源 cache-first（后台更新）；跨域请求（Supabase）直接走网络。 */
+
 var CACHE = "xinbi-basic-v54";
 var SHELL = [
   "./",
@@ -71,9 +69,8 @@ self.addEventListener("fetch", function (e) {
   var req = e.request;
   if (req.method !== "GET") return;
   var url = new URL(req.url);
-  if (url.origin !== self.location.origin) return; /* Supabase 等走网络 */
+  if (url.origin !== self.location.origin) return; 
 
-  /* 导航请求：网络优先，失败回退缓存（离线可用） */
   if (req.mode === "navigate") {
     e.respondWith(
       fetch(req).then(function (res) {
@@ -91,7 +88,6 @@ self.addEventListener("fetch", function (e) {
     return;
   }
 
-  /* JS/CSS：网络优先（避免新 HTML 配旧脚本文本），失败回退缓存 */
   if (/\.(js|css)$/.test(url.pathname)) {
     e.respondWith(
       fetch(req).then(function (res) {
@@ -105,7 +101,6 @@ self.addEventListener("fetch", function (e) {
     return;
   }
 
-  /* 其他静态资源（图片/字体）：缓存优先，后台更新 */
   e.respondWith(
     caches.match(req).then(function (hit) {
       var net = fetch(req).then(function (res) {

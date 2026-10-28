@@ -1,8 +1,4 @@
-/* ============================================================
- * 新笔文学社 · 基础版本 v0.5 —— 内容管理后台（admin.html）
- * 数据源优先级：云端作品库 → 本地语料 + 本地草稿覆盖层
- * 写入：已登录 → 写入云端（全局共享）；未登录 → 仅写本地草稿
- * ============================================================ */
+
 window.XB_ADMIN = (function () {
   "use strict";
 
@@ -39,7 +35,6 @@ window.XB_ADMIN = (function () {
   }
   function on(sel, ev, fn) { var el = $(sel); if (el) el.addEventListener(ev, fn); }
 
-  /* ---------- 本地覆盖层 ---------- */
   function overlay() {
     var ov = LS.get("overlay", null);
     if (!ov) ov = { useLocal: false, works: {}, deletedWorks: [], events: null, members: null, journal: null };
@@ -47,7 +42,6 @@ window.XB_ADMIN = (function () {
   }
   function saveOverlay(ov) { LS.set("overlay", ov); }
 
-  /* ---------- 数据装载 ---------- */
   function localCorpus() {
     var corpus = {};
     D.works.forEach(function (w) { corpus[w.title] = w; });
@@ -144,7 +138,6 @@ window.XB_ADMIN = (function () {
     ADMIN.source = "local";
   }
 
-  /* ---------- 作品管理 ---------- */
   function renderWorks() {
     var list = ADMIN.works;
     $("#wkCount").textContent = "共 " + list.length + " 篇";
@@ -211,7 +204,6 @@ window.XB_ADMIN = (function () {
     };
     $("#workEditor").classList.remove("open");
 
-    /* 本机草稿 */
     var ov = overlay();
     ov.useLocal = true;
     if (!ov.works) ov.works = {};
@@ -268,7 +260,6 @@ window.XB_ADMIN = (function () {
     updateModeLabel();
   }
 
-  /* ---------- 活动 / 社员 / 社刊 ---------- */
   function renderEvents() {
     var list = ADMIN.events;
     $("#evCount").textContent = "共 " + list.length + " 项";
@@ -432,7 +423,6 @@ window.XB_ADMIN = (function () {
     toast("已添加，向下滚动填写内容后保存");
   }
 
-  /* ---------- 数据页 ---------- */
   function exportJSON() {
     var data = {
       _meta: { app: "xinbi-basic", exportedAt: new Date().toISOString(), source: ADMIN.source },
@@ -498,7 +488,6 @@ window.XB_ADMIN = (function () {
     }
   }
 
-  /* ---------- 模式与初始化 ---------- */
   function updateModeLabel() {
     var el = $("#adMode");
     if (el) {
@@ -550,7 +539,7 @@ window.XB_ADMIN = (function () {
         app.style.display = "block";
         $("#adUserName").textContent = local.name || "本地草稿";
       } else if (ADMIN.source === "cloud") {
-        /* 云端可读：展示只读视图，登录后即可编辑 */
+        
         gate.style.display = "none";
         app.style.display = "block";
         $("#adUserName").textContent = "访客（只读）";
@@ -600,7 +589,6 @@ window.XB_ADMIN = (function () {
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
 
-  /* ===== 活动档案（美篇全文） ===== */
   var ACT = LS.get("activities", null);
   function actData() { return ACT || (window.XB_ACTIVITIES || []); }
   function renderActs() {
