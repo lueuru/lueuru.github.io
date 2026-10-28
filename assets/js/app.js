@@ -2176,6 +2176,57 @@
   }
 
   /* v4.1 版块索引 / 面包屑 / 数据看板 */
+  /* v4.4 标签索引 */
+  function initTagsPage() {
+    var idx = {}, result = $("#tagResult"), box = $("#tagIndex"), sub = $("#tagSub");
+    if (!box) return;
+    function add(tag, type, item) {
+      if (!tag) return;
+      var key = type + "|" + tag;
+      if (!idx[key]) idx[key] = { tag: tag, type: type, items: [] };
+      if (!idx[key].items.some(function (x) { return x.href === item.href; })) idx[key].items.push(item);
+    }
+    DATA.works.filter(function (w) { return w.verified; }).forEach(function (w) {
+      add(D.categories[w.category] || "", "体裁", { kind: "作品", title: w.title, href: "work.html?id=" + w.id });
+      add(w.tag || "", "体裁", { kind: "作品", title: w.title, href: "work.html?id=" + w.id });
+      add(w.author || "", "作者", { kind: "作品", title: w.title, href: "work.html?id=" + w.id });
+    });
+    (window.XB_ACTIVITIES || []).forEach(function (a) {
+      add(String(a.date).slice(0, 4), "年份", { kind: "活动", title: a.title, href: "activity.html?id=" + a.id });
+      add(a.title.split("——")[0], "活动", { kind: "活动", title: a.title, href: "activity.html?id=" + a.id });
+    });
+    (D.site.honors || []).forEach(function (h) {
+      if (/^\d{4}$/.test(h.year)) add(h.year, "年份", { kind: "荣誉", title: h.title, href: "about.html#records" });
+    });
+    (window.XB_PEOPLE || []).forEach(function (p2) {
+      add(p2.name, "人物", { kind: "人物", title: p2.name + " · " + p2.role, href: "activity.html?id=" + p2.act });
+    });
+    var all = Object.keys(idx).map(function (k) { return idx[k]; });
+    var cur = new URLSearchParams(location.search).get("tag");
+
+    var types = ["体裁", "年份", "活动", "人物", "作者"];
+    box.innerHTML = types.map(function (t) {
+      var list = all.filter(function (x) { return x.type === t; });
+      if (!list.length) return "";
+      return '<div class="tag-group"><h3>' + t + " · " + list.length + '</h3><div class="tag-chips">' +
+        list.map(function (x) {
+          return '<a class="tag-chip' + (x.tag === cur ? " on" : "") + '" href="tags.html?tag=' + encodeURIComponent(x.tag) + '">' +
+            esc(x.tag) + "<em>" + x.items.length + "</em></a>";
+        }).join("") + "</div></div>";
+    }).join("");
+
+    if (!result) return;
+    if (!cur) { result.innerHTML = ""; if (sub) sub.textContent = "按体裁、年份、活动、作者交叉索引 · 共 " + all.length + " 个标签"; return; }
+    var hits = all.filter(function (x) { return x.tag === cur; });
+    var items = [];
+    hits.forEach(function (h) { h.items.forEach(function (i) { if (!items.some(function (y) { return y.href === i.href; })) items.push(i); }); });
+    if (sub) sub.textContent = "标签：" + cur + " · " + items.length + " 条";
+    result.innerHTML = '<div class="guide-card rv on"><h2>「' + esc(cur) + "」相关 " + items.length + " 条</h2><div class='org-list'>" +
+      items.map(function (i) {
+        return "<div class='org-item'><b>" + esc(i.kind) + "</b><span><a href='" + i.href + "'>" + esc(i.title) + "</a></span></div>";
+      }).join("") + "</div></div>";
+  }
+
   function renderSections() {
     var box = $("#secList");
     if (!box) return;
@@ -2191,7 +2242,7 @@
     var page = document.body.getAttribute("data-page");
     var map = { sections: "社刊版块", works: "作品库", journal: "社刊", gallery: "活动现场",
       activity: "活动档案", about: "关于我们", guide: "投稿指南", craft: "写作课",
-      reading: "书单", contest: "征文", search: "搜索", authors: "作者", work: "作品", issue: "期号" };
+      reading: "书单", contest: "征文", search: "搜索", authors: "作者", work: "作品", issue: "期号", tags: "标签索引" };
     var label = map[page];
     var main = document.getElementById("main");
     if (!label || !main || document.querySelector(".crumb")) return;
@@ -2325,6 +2376,7 @@
     if (page === "search") initSearchPage();
     if (page === "gallery") renderGallery();
     if (page === "sections") renderSections();
+    if (page === "tags") initTagsPage();
     if (page === "activity") initActivityPage();
     if (page === "about") { renderPeople(); renderBigTimeline(); }
     if (page === "guide") initGuidePage();
