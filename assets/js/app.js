@@ -1447,8 +1447,20 @@
           if (pp.indexOf(a.name) > -1) mentions.push({ act: ac, sent: pp });
         });
       });
+      /* 发表名录交叉引用 */
+      var catRows = (D.site.catalog || []).filter(function (c) { return (c.author || "").indexOf(a.name) > -1; });
       var mh = $("#authorMentions");
       if (mh) mh.parentNode.removeChild(mh);
+      if (catRows.length) {
+        var cbox = document.createElement("div");
+        cbox.className = "guide-card rv on";
+        cbox.id = "authorCatalog";
+        cbox.innerHTML = "<h2>发表名录中的记录</h2><div class='org-list'>" +
+          catRows.map(function (c) {
+            return "<div class='org-item'><b>" + esc(c.kind || "作品") + "</b><span>《" + esc(c.title) + "》 · " + esc(c.where || "") + "</span></div>";
+          }).join("") + "</div>";
+        wrap.appendChild(cbox);
+      }
       if (mentions.length) {
         var mbox = document.createElement("div");
         mbox.className = "guide-card rv on";
