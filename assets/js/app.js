@@ -15,8 +15,15 @@
   /* 运行时数据：works 可能是本地示例，也可能被远端真实数据替换 */
   var DATA = { works: [], source: "local", remoteTried: false, showDemo: false };
 
-  /* 已发表作品（真实）置顶，其余标记为演示示例 */
+  /* 已发表作品（真实）置顶；示例作品仅在 ?demo=1 时出现 */
+  function demoMode() { return new URLSearchParams(location.search).get("demo") === "1"; }
+
   function buildWorks(cloudRows) {
+    if (!demoMode()) return (D.officialWorks || []).map(function (w) {
+      var o = {}; Object.keys(w).forEach(function (k) { o[k] = w[k]; });
+      o.verified = true;
+      return o;
+    });
     var official = (D.officialWorks || []).map(function (w) {
       var o = {}; Object.keys(w).forEach(function (k) { o[k] = w[k]; });
       o.verified = true;
@@ -262,7 +269,7 @@
    * ============================================================ */
   function matchWorks() {
     return DATA.works.filter(function (w) {
-      if (!w.verified && !DATA.showDemo) return false;
+      if (!w.verified && !demoMode()) return false;
       return wState.filter === "all" || w.category === wState.filter;
     });
   }
@@ -294,22 +301,19 @@
   }
 
   function updateDemoToggle() {
-    var n = DATA.works.filter(function (w) { return !w.verified; }).length;
+    var on = demoMode();
     $$("[data-demo-toggle]").forEach(function (b) {
-      b.textContent = DATA.showDemo ? "只看已发表作品" : ("显示示例作品（" + n + " 篇）");
+      b.textContent = on ? "← 返回真实内容" : "查看示例版式（30 篇，仅演示）";
     });
   }
 
   function bindDemoToggle() {
     $$("[data-demo-toggle]").forEach(function (b) {
       b.addEventListener("click", function () {
-        DATA.showDemo = !DATA.showDemo;
-        updateDemoToggle();
-        if (document.body.getAttribute("data-page") === "works") {
-          var grid = $("#wlibGrid");
-          if (grid) { location.reload(); return; }
-        }
-        renderWorks(true);
+        var u = new URL(location.href);
+        if (demoMode()) u.searchParams.delete("demo");
+        else u.searchParams.set("demo", "1");
+        location.href = u.href;
       });
     });
     updateDemoToggle();
@@ -1261,7 +1265,7 @@
     var st = { cat: "all", sort: "new", q: "", shown: 12 };
 
     function list() {
-      var arr = DATA.works.filter(function (w) { return w.verified || DATA.showDemo; });
+      var arr = DATA.works.filter(function (w) { return w.verified || demoMode(); });
       if (st.cat !== "all") arr = arr.filter(function (w) { return w.category === st.cat; });
       if (st.q) {
         var q = st.q.toLowerCase();
