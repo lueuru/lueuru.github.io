@@ -599,4 +599,45 @@ window.XB_ADMIN = (function () {
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
   else init();
+
+  /* ===== 活动档案（美篇全文） ===== */
+  var ACT = LS.get("activities", null);
+  function actData() { return ACT || (window.XB_ACTIVITIES || []); }
+  function renderActs() {
+    var box = $("#acRows"), cnt = $("#acCount");
+    if (!box) return;
+    var list = actData();
+    if (cnt) cnt.textContent = list.length + " 篇";
+    box.innerHTML = list.map(function (a, i) {
+      return '<div class="ev-row" style="border:1px solid var(--line-2);border-radius:8px;padding:14px;margin-bottom:12px">' +
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">' +
+        '<input class="f-in" data-i="' + i + '" data-f="date" value="' + esc(a.date) + '" placeholder="日期" style="width:110px">' +
+        '<input class="f-in" data-i="' + i + '" data-f="title" value="' + esc(a.title) + '" placeholder="标题" style="flex:1;min-width:220px">' +
+        '<input class="f-in" data-i="' + i + '" data-f="url" value="' + esc(a.url) + '" placeholder="原文链接" style="flex:1;min-width:220px">' +
+        '</div><textarea class="f-in" data-i="' + i + '" data-f="text" rows="5" style="width:100%">' + esc((a.paras || []).join("\n\n")) + '</textarea></div>';
+    }).join("");
+    $$("#acRows .f-in").forEach(function (el) {
+      el.addEventListener("change", function () {
+        var i = +el.dataset.i, f = el.dataset.f, list2 = actData();
+        if (f === "text") list2[i].paras = el.value.split("\n\n");
+        else list2[i][f] = el.value;
+        ACT = list2; LS.set("activities", list2);
+      });
+    });
+  }
+  function actExport() {
+    var list = actData();
+    var js = "/* 自动生成：美篇活动全文 */\nwindow.XB_ACTIVITIES = " + JSON.stringify(list, null, 2) + ";\n";
+    var b = new Blob([js], { type: "text/plain" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(b); a.download = "activities.js"; a.click();
+    toast("已导出 activities.js，替换后重新发布即可生效");
+  }
+  on("#acExport", "click", actExport);
+  on("#acBackup", "click", function () {
+    var b = new Blob([JSON.stringify({ activities: actData(), people: window.XB_PEOPLE || [] }, null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(b); a.download = "xinbi-backup.json"; a.click();
+  });
+
 })();

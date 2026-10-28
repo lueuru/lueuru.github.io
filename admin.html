@@ -88,6 +88,7 @@
       <button type="button" class="on" data-tab="works">作品</button>
       <button type="button" data-tab="events">活动</button>
       <button type="button" data-tab="members">社员</button>
+      <button type="button" data-tab="acts">活动档案</button>
       <button type="button" data-tab="journal">社刊</button>
       <button type="button" data-tab="data">数据</button>
     </nav>
@@ -124,6 +125,17 @@
         <span class="ad-count" id="mbCount"></span>
       </div>
       <div id="mbRows"></div>
+    </section>
+
+    <!-- 活动档案 -->
+    <section class="ad-panel" id="tab-acts">
+      <div class="ad-toolbar">
+        <span class="ad-count" id="acCount"></span>
+        <button class="btn btn-d sm" id="acExport" type="button">⬇ 导出 activities.js</button>
+        <button class="btn btn-l sm" id="acBackup" type="button">⬇ 备份 JSON</button>
+      </div>
+      <p class="ad-sub" style="margin:0 0 12px">编辑后点「导出」，把下载的文件替换 assets/js/activities.js 并重新发布站点。</p>
+      <div id="acRows"></div>
     </section>
 
     <!-- 社刊 -->
