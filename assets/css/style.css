@@ -2733,3 +2733,25 @@ body.dark .tl-year { color: var(--gold); }
   border: 1px solid var(--line-2); border-radius: 3px; padding: 1px 6px; vertical-align: 3px;
 }
 .tl-foot { text-align: center; margin-top: 10px; }
+
+/* 浮动目录（阅读侧栏） */
+.toc-float {
+  position: fixed; right: 22px; top: 120px; width: 168px;
+  display: none; flex-direction: column; gap: 2px;
+  padding-left: 12px; border-left: 1px solid var(--line);
+  z-index: 40; max-height: 62vh; overflow: auto;
+}
+.toc-float b {
+  font-size: .64rem; letter-spacing: .2em; color: var(--gold);
+  margin-bottom: 8px; font-weight: 700;
+}
+.toc-float a {
+  font-size: .76rem; line-height: 1.6; color: var(--ink-3);
+  padding: 3px 0; border-left: 2px solid transparent; margin-left: -13px; padding-left: 11px;
+  transition: color .2s, border-color .2s;
+}
+.toc-float a:hover { color: var(--ink); }
+.toc-float a.on { color: var(--red); border-left-color: var(--red); font-weight: 600; }
+body.dark .toc-float a.on { color: var(--gold); border-left-color: var(--gold); }
+@media (min-width: 1320px) { .toc-float { display: flex; } }
+@media print { .toc-float { display: none !important; } }

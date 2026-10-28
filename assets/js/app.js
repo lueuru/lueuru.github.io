@@ -2264,6 +2264,33 @@
     if (note) note.textContent = (sec.source || "") + "；共 " + sec.total + " 个版块，尚有 " + sec.pending + " 个待补。";
   }
 
+  /* v4.6 浮动目录（阅读侧栏） */
+  function buildTOC() {
+    if (document.querySelector(".toc-float")) return;
+    var heads = Array.prototype.slice.call(document.querySelectorAll("h2")).filter(function (h) {
+      return h.textContent.trim().length > 1 && h.offsetParent !== null;
+    });
+    if (heads.length < 3) return;
+    var nav = document.createElement("nav");
+    nav.className = "toc-float";
+    nav.setAttribute("aria-label", "本页目录");
+    nav.innerHTML = "<b>本页目录</b>" + heads.map(function (h, i) {
+      if (!h.id) h.id = "sect-" + i;
+      return '<a href="#' + h.id + '">' + esc(h.textContent.trim()) + "</a>";
+    }).join("");
+    document.body.appendChild(nav);
+    var links = Array.prototype.slice.call(nav.querySelectorAll("a"));
+    if ("IntersectionObserver" in window) {
+      var io = new IntersectionObserver(function (es) {
+        es.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          links.forEach(function (a) { a.classList.toggle("on", a.getAttribute("href") === "#" + e.target.id); });
+        });
+      }, { rootMargin: "-15% 0px -75% 0px" });
+      heads.forEach(function (h) { io.observe(h); });
+    }
+  }
+
   function buildCrumb() {
     var page = document.body.getAttribute("data-page");
     var map = { sections: "社刊版块", works: "作品库", journal: "社刊", gallery: "活动现场",
@@ -2399,6 +2426,7 @@
     if (page === "reading") initReadingPage();
     if (page === "contest") initContestPage();
     buildCrumb();
+    buildTOC();
     if (page === "search") initSearchPage();
     if (page === "gallery") renderGallery();
     if (page === "sections") renderSections();
