@@ -180,7 +180,6 @@
     return true;
   }
 
-  /* 密码登录 */
   document.getElementById("pwdForm").addEventListener("submit", function (e) {
     e.preventDefault();
     var email = document.getElementById("pEmail").value.trim();
@@ -197,7 +196,6 @@
     }).catch(function () { busy(btn, false); say("登录失败：网络异常或云端不可达", true); });
   });
 
-  /* 验证码登录 */
   document.getElementById("oSendBtn").addEventListener("click", function () {
     var email = document.getElementById("oEmail").value.trim();
     if (!email) { say("请先填写邮箱", true); return; }
@@ -235,7 +233,6 @@
     }).catch(function () { busy(btn, false); say("登录失败：网络异常", true); });
   });
 
-  /* 注册 */
   document.getElementById("rSendBtn").addEventListener("click", function () {
     var email = document.getElementById("rEmail").value.trim();
     if (!email) { say("请先填写邮箱", true); return; }
@@ -278,7 +275,6 @@
     }).catch(function () { busy(btn, false); say("注册失败：网络异常", true); });
   });
 
-  /* 找回密码 */
   document.getElementById("fSendBtn").addEventListener("click", function () {
     var email = document.getElementById("fEmail").value.trim();
     if (!email) { say("请先填写邮箱", true); return; }
@@ -304,7 +300,6 @@
     if (!code || !pwd) { say("请填写验证码和新密码", true); return; }
     if (pwd.length < 6) { say("密码至少 6 位", true); return; }
     say("正在重置…");
-    /* 重置密码需要 updateUser 句柄：重新发起一次验证码流程并直接带 updateUser */
     XB_CLOUD.sendOtp(pending.forgot.email).then(function (r) {
       if (r && r.error || !r || !r.data || !r.data.updateUser) { say("重置失败，请重试", true); return; }
       r.data.updateUser({ nonce: code, password: pwd }).then(function (done) {
@@ -315,7 +310,6 @@
     }).catch(function () { say("重置失败：网络异常", true); });
   });
 
-  /* 本地草稿模式（明确不写云端） */
   document.getElementById("draftBtn").addEventListener("click", function () {
     try {
       localStorage.setItem("xb_user", JSON.stringify({ name: "本地草稿", email: "", draft: true }));
@@ -323,7 +317,6 @@
     location.href = next === "index.html" ? "admin.html" : next;
   });
 
-  /* 已有云端会话则直接进入 */
   if (window.XB_CLOUD) {
     XB_CLOUD.load().then(function () { return XB_CLOUD.session(); }).then(function (s) {
       if (s && s.user) location.href = next;
