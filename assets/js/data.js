@@ -1435,3 +1435,20 @@ window.XB_DATA = {
   (D.site.records || []).push({ k: "第 36 期", v: "2025 年出版社刊《年轻的心》第 36 期" });
   (D.site.records || []).push({ k: "1027 篇", v: "「光华杯」征文收稿量，评出优秀作品 90 篇" });
 })();
+
+/* v4.1 社刊版块（仅收录原文点名的 5 个；其余 6 个留白待补） */
+(function () {
+  var D = window.XB_DATA;
+  D.site.sections = {
+    verified: [
+      { name: "卷首", note: "每期开篇" },
+      { name: "校园风铃", note: "校园生活" },
+      { name: "璀璨星空", note: "社员作品" },
+      { name: "校友风采", note: "校友故事" },
+      { name: "共育心语", note: "家校共育" }
+    ],
+    total: 11,
+    pending: 6,
+    source: "版块名称据《年轻的心》社刊介绍（社团年会记录）"
+  };
+})();

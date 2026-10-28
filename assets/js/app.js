@@ -2141,6 +2141,51 @@
     observeReveals();
   }
 
+  /* v4.1 版块索引 / 面包屑 / 数据看板 */
+  function renderSections() {
+    var box = $("#secList");
+    if (!box) return;
+    var sec = D.site.sections || {};
+    box.innerHTML = (sec.verified || []).map(function (x) {
+      return '<div class="sec-card"><b>' + esc(x.name) + "</b><span>" + esc(x.note || "") + "</span></div>";
+    }).join("");
+    var note = $("#secNote");
+    if (note) note.textContent = (sec.source || "") + "；共 " + sec.total + " 个版块，尚有 " + sec.pending + " 个待补。";
+  }
+
+  function buildCrumb() {
+    var page = document.body.getAttribute("data-page");
+    var map = { sections: "社刊版块", works: "作品库", journal: "社刊", gallery: "活动现场",
+      activity: "活动档案", about: "关于我们", guide: "投稿指南", craft: "写作课",
+      reading: "书单", contest: "征文", search: "搜索", authors: "作者", work: "作品", issue: "期号" };
+    var label = map[page];
+    var main = document.getElementById("main");
+    if (!label || !main || document.querySelector(".crumb")) return;
+    var c = document.createElement("div");
+    c.className = "crumb";
+    c.innerHTML = '<a href="index.html">首页</a> <span aria-hidden="true">/</span> <span>' + label + "</span>";
+    main.parentNode.insertBefore(c, main);
+  }
+
+  function renderDash() {
+    var box = $("#dashGrid");
+    if (!box) return;
+    var acts = window.XB_ACTIVITIES || [];
+    var chars = acts.reduce(function (n, a) { return n + (a.paras || []).join("").length; }, 0);
+    var ph = acts.reduce(function (n, a) { return n + (a.photos || []).length; }, 0) + (D.site.gallery || []).length;
+    var items = [
+      { n: (D.officialWorks || []).length, l: "篇已发表作品" },
+      { n: acts.length, l: "场活动档案" },
+      { n: chars, l: "字活动原文" },
+      { n: ph, l: "张现场照片" },
+      { n: (window.XB_PEOPLE || []).length, l: "位记录在册者" },
+      { n: (D.site.honors || []).length, l: "项荣誉" }
+    ];
+    box.innerHTML = items.map(function (i) {
+      return '<div class="dash-cell"><b>' + i.n + "</b><span>" + i.l + "</span></div>";
+    }).join("");
+  }
+
   function renderGallery() {
     var box = $("#photoGrid");
     if (!box) return;
@@ -2194,6 +2239,7 @@
       renderTopics();
       renderGeo();
       renderGalleryStrip();
+      renderDash();
       renderEvents();
       renderMembers();
       renderPortals();
@@ -2241,8 +2287,10 @@
     if (page === "craft") initCraftPage();
     if (page === "reading") initReadingPage();
     if (page === "contest") initContestPage();
+    buildCrumb();
     if (page === "search") initSearchPage();
     if (page === "gallery") renderGallery();
+    if (page === "sections") renderSections();
     if (page === "activity") initActivityPage();
     if (page === "about") { renderPeople(); renderBigTimeline(); }
     if (page === "guide") initGuidePage();

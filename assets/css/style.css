@@ -2668,3 +2668,26 @@ p { text-wrap: pretty; }
   .wk-body { max-width: none; font-size: 11pt; }
   a { color: #000; text-decoration: none; }
 }
+
+/* 版块索引 */
+.sec-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+.sec-card {
+  border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px;
+  background: var(--card); position: relative; overflow: hidden;
+}
+.sec-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: linear-gradient(var(--red), var(--gold)); }
+.sec-card b { display: block; font-size: 1rem; letter-spacing: .04em; }
+.sec-card span { font-size: .76rem; color: var(--ink-3); }
+/* 面包屑 */
+.crumb { max-width: var(--maxw); margin: 18px auto 0; padding: 0 24px; font-size: .78rem; color: var(--ink-3); }
+.crumb a { color: var(--ink-3); }
+.crumb a:hover { color: var(--red); }
+
+/* 数据看板 */
+.dash { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; background: var(--line);
+  border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; max-width: var(--maxw); margin: 26px auto 0; }
+.dash-cell { background: var(--card); padding: 22px 12px; text-align: center; }
+.dash-cell b { display: block; font-family: var(--serif); font-size: clamp(1.3rem, 3vw, 1.9rem); color: var(--red); font-variant-numeric: tabular-nums; }
+body.dark .dash-cell b { color: var(--gold); }
+.dash-cell span { font-size: .72rem; color: var(--ink-3); letter-spacing: .06em; }
+@media (max-width: 760px) { .dash { grid-template-columns: repeat(3, 1fr); } }
