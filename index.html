@@ -144,6 +144,16 @@
   </div>
 </div>
 
+<!-- ===================== 全站导览 ===================== -->
+<section class="sec" style="padding-top:0;padding-bottom:0">
+  <div class="si">
+    <div class="st rv"><span class="tag">Explore</span><h2>全站导览</h2>
+      <p class="desc">这个站上有什么，一屏看全</p>
+    </div>
+  </div>
+  <div class="navgrid rv" id="navGrid"></div>
+</section>
+
 <!-- ===================== 今日诗签 ===================== -->
 <div class="daily-strip rv" id="dailyStrip"></div>
 
@@ -290,7 +300,16 @@
   </div>
 </section>
 
-<!-- ===================== 诗签 ===================== -->
+<!-- ===================== 更多内容（折叠） ===================== -->
+<section class="sec" id="more">
+  <div class="si">
+    <div class="st rv"><span class="tag">More</span><h2>更多内容</h2>
+      <p class="desc">诗签 · 文学地理 · 友情链接 —— 点开细看</p>
+    </div>
+  </div>
+  <details class="fold-box rv" open>
+    <summary>今日诗签</summary>
+    <div class="fold-body"><!-- ===================== 诗签 ===================== -->
 <section class="sec bp" id="quotes">
   <div class="si">
     <div class="st rv"><span class="tag">Marginalia</span><h2>诗签</h2>
@@ -300,7 +319,11 @@
   </div>
 </section>
 
-<!-- ===================== 文学地理 ===================== -->
+</div>
+  </details>
+  <details class="fold-box rv">
+    <summary>文学地理（岳阳与湘北的文学地标）</summary>
+    <div class="fold-body"><!-- ===================== 文学地理 ===================== -->
 <section class="sec bw" id="geo">
   <div class="si">
     <div class="st rv"><span class="tag">Literary Geography</span><h2>文学地理</h2>
@@ -308,6 +331,24 @@
     </div>
     <div class="geo-grid rv" id="geoGrid"></div>
   </div>
+</section>
+
+</div>
+  </details>
+  <details class="fold-box rv">
+    <summary>文学网站入口</summary>
+    <div class="fold-body"><!-- ===================== 文学网站入口 ===================== -->
+<section class="sec bp" id="literature">
+  <div class="si">
+    <div class="st rv"><span class="tag">Portal</span><h2>文学网站入口</h2>
+      <p class="desc">这些文学园地，值得每一个爱文字的人收藏</p>
+    </div>
+    <div class="pg" id="portalGrid"></div>
+  </div>
+</section>
+
+</div>
+  </details>
 </section>
 
 <!-- ===================== 投稿 ===================== -->
@@ -348,16 +389,6 @@
       </form>
       <div class="fok" id="subOk">投稿已提交成功！我们将尽快审核并与您联系。</div>
     </div>
-  </div>
-</section>
-
-<!-- ===================== 文学网站入口 ===================== -->
-<section class="sec bp" id="literature">
-  <div class="si">
-    <div class="st rv"><span class="tag">Portal</span><h2>文学网站入口</h2>
-      <p class="desc">这些文学园地，值得每一个爱文字的人收藏</p>
-    </div>
-    <div class="pg" id="portalGrid"></div>
   </div>
 </section>
 

@@ -2311,6 +2311,28 @@
     main.parentNode.insertBefore(c, main);
   }
 
+  /* v5.3 全站导览卡 */
+  function renderNavCards() {
+    var box = $("#navGrid");
+    if (!box) return;
+    var acts = window.XB_ACTIVITIES || [];
+    var chars = acts.reduce(function (n, a) { return n + (a.paras || []).join("").length; }, 0);
+    var photos = acts.reduce(function (n, a) { return n + (a.photos || []).length; }, 0) + (D.site.gallery || []).length;
+    var cards = [
+      { t: "作品库", d: "已发表作品，附指导老师点评与来源", n: (D.officialWorks || []).length + " 篇", h: "works.html" },
+      { t: "活动档案", d: "会议纪要与现场照片，全文可读", n: acts.length + " 场 · " + chars + " 字 · " + photos + " 图", h: "gallery.html" },
+      { t: "人物志", d: "社长、主编、校领导与学生社干", n: (window.XB_PEOPLE || []).length + " 位", h: "about.html#people" },
+      { t: "大事记", d: "从建校、创社到今天的完整脉络", n: "1960 → 2026", h: "timeline.html" },
+      { t: "社刊档案", d: "《年轻的心》的期数、版块与印量", n: "第 36 期 · 11 版块", h: "sections.html" },
+      { t: "标签索引", d: "按体裁、年份、活动、作者交叉检索", n: "40 个标签", h: "tags.html" },
+      { t: "光华杯征文", d: "清明缅怀——传承的力量", n: "1027 篇 → 90 篇", h: "contest.html" },
+      { t: "投稿与指南", d: "怎么投稿、格式要求、往哪里交", n: "长期征稿", h: "guide.html" }
+    ];
+    box.innerHTML = cards.map(function (c) {
+      return '<a class="navcard" href="' + c.h + '"><b>' + esc(c.t) + "</b><span>" + esc(c.d) + "</span><em>" + esc(c.n) + "</em></a>";
+    }).join("");
+  }
+
   function renderDash() {
     var box = $("#dashGrid");
     if (!box) return;
@@ -2384,6 +2406,7 @@
       renderGeo();
       renderGalleryStrip();
       renderDash();
+      renderNavCards();
       renderEvents();
       renderMembers();
       renderPortals();

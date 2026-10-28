@@ -2755,3 +2755,38 @@ body.dark .tl-year { color: var(--gold); }
 body.dark .toc-float a.on { color: var(--gold); border-left-color: var(--gold); }
 @media (min-width: 1320px) { .toc-float { display: flex; } }
 @media print { .toc-float { display: none !important; } }
+
+/* 全站导览卡 */
+.navgrid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+  max-width: var(--maxw); margin: 22px auto 0; padding: 0 24px;
+}
+.navcard {
+  display: flex; flex-direction: column; gap: 4px;
+  border: 1px solid var(--line); border-radius: var(--radius);
+  background: var(--card); padding: 18px 18px 16px; text-decoration: none;
+  transition: transform .25s var(--ease), border-color .25s;
+}
+.navcard:hover { transform: translateY(-3px); border-color: var(--red); }
+.navcard b { font-size: .98rem; letter-spacing: .04em; color: var(--ink); }
+.navcard span { font-size: .76rem; color: var(--ink-3); line-height: 1.6; }
+.navcard em { font-style: normal; font-size: .74rem; color: var(--red); margin-top: 6px; font-variant-numeric: tabular-nums; }
+body.dark .navcard:hover { border-color: var(--gold); }
+body.dark .navcard em { color: var(--gold); }
+@media (max-width: 900px) { .navgrid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px) { .navgrid { grid-template-columns: 1fr; } }
+/* 折叠板块 */
+.fold-box {
+  max-width: var(--maxw); margin: 0 auto 14px; border: 1px solid var(--line);
+  border-radius: var(--radius); background: var(--card); overflow: hidden;
+}
+.fold-box summary {
+  cursor: pointer; padding: 14px 20px; font-size: .9rem; font-weight: 600;
+  letter-spacing: .04em; color: var(--ink); list-style: none;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.fold-box summary::-webkit-details-marker { display: none; }
+.fold-box summary::after { content: "+"; color: var(--gold); font-size: 1.1rem; }
+.fold-box[open] summary::after { content: "–"; }
+.fold-box[open] summary { border-bottom: 1px dashed var(--line); }
+.fold-body { padding: 6px 0 0; }
