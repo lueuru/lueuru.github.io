@@ -2707,3 +2707,29 @@ body.dark .dash-cell b { color: var(--gold); }
 body.dark .tag-chip.on { background: var(--gold); border-color: var(--gold); color: #1b1611; }
 .tag-chip em { font-style: normal; font-size: .7rem; color: var(--ink-3); }
 .tag-chip.on em { color: rgba(255,255,255,.7); }
+
+/* 大事记时间轴 */
+.tl-wrap { max-width: 900px; margin: 0 auto; padding: 10px 24px 80px; }
+.tl-line { position: relative; padding-left: 28px; }
+.tl-line::before {
+  content: ""; position: absolute; left: 7px; top: 6px; bottom: 6px; width: 2px;
+  background: linear-gradient(var(--gold), var(--line-2));
+}
+.tl-item { position: relative; padding: 0 0 30px 0; }
+.tl-item::before {
+  content: ""; position: absolute; left: -27px; top: 6px; width: 12px; height: 12px;
+  border-radius: 50%; background: var(--card); border: 2px solid var(--red);
+}
+.tl-item.key::before { background: var(--red); }
+.tl-year {
+  display: inline-block; font-family: var(--serif); font-size: 1.05rem; font-weight: 700;
+  color: var(--red); letter-spacing: .04em; font-variant-numeric: tabular-nums;
+}
+body.dark .tl-year { color: var(--gold); }
+.tl-body h3 { font-size: 1rem; margin: 6px 0 6px; letter-spacing: .02em; }
+.tl-body p { font-size: .86rem; line-height: 1.95; color: var(--ink-2); }
+.tl-tag {
+  margin-left: 10px; font-size: .64rem; letter-spacing: .12em; color: var(--ink-3);
+  border: 1px solid var(--line-2); border-radius: 3px; padding: 1px 6px; vertical-align: 3px;
+}
+.tl-foot { text-align: center; margin-top: 10px; }

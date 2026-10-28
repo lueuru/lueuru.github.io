@@ -1,7 +1,7 @@
 /* 新笔文学社 · 基础版本 —— Service Worker
  * 策略：导航请求 network-first（保证内容新鲜，离线回退缓存）；
  *       同源静态资源 cache-first（后台更新）；跨域请求（Supabase）直接走网络。 */
-var CACHE = "xinbi-basic-v49";
+var CACHE = "xinbi-basic-v50";
 var SHELL = [
   "./",
   "./index.html",
@@ -22,6 +22,7 @@ var SHELL = [
   "./activity.html",
   "./sections.html",
   "./tags.html",
+  "./timeline.html",
   "./assets/js/contest-real.js",
   "./assets/js/activities.js",
   "./assets/js/people.js",

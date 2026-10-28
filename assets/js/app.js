@@ -2177,6 +2177,32 @@
 
   /* v4.1 版块索引 / 面包屑 / 数据看板 */
   /* v4.4 标签索引 */
+  /* v4.5 大事记页 */
+  function initTimelinePage() {
+    var box = $("#tlList");
+    if (!box) return;
+    var items = [];
+    (D.site.timeline || []).forEach(function (t) {
+      items.push({ date: t.year, title: t.title, desc: t.desc, kind: t.year === "1960" || t.year === "1984" ? "建校/创社" : "沿革", key: true });
+    });
+    (window.XB_ACTIVITIES || []).forEach(function (a) {
+      items.push({ date: String(a.date), title: a.title, desc: "活动档案 · " + (a.paras || []).length + " 段原文、" + (a.photos || []).length + " 张照片", kind: "活动", id: a.id });
+    });
+    (D.site.honors || []).forEach(function (h) {
+      if (/^\d{4}$/.test(h.year)) items.push({ date: h.year, title: h.title, desc: h.org, kind: "荣誉" });
+    });
+    function sortKey(d) { var m = String(d).match(/\d{4}(-\d{2}(-\d{2})?)?/); return m ? m[0] : String(d); }
+    items.sort(function (x, y) { return sortKey(y.date).localeCompare(sortKey(x.date)); });
+    box.innerHTML = items.map(function (it) {
+      var link = it.id ? ' · <a href="activity.html?id=' + it.id + '" style="color:var(--gold)">详情</a>' : "";
+      return '<div class="tl-item' + (it.key ? " key" : "") + '">' +
+        '<span class="tl-year">' + esc(it.date) + "</span><span class='tl-tag'>" + esc(it.kind) + "</span>" +
+        '<div class="tl-body"><h3>' + esc(it.title) + "</h3><p>" + esc(it.desc || "") + link + "</p></div></div>";
+    }).join("");
+    var sub = $("#tlSub");
+    if (sub) sub.textContent = "从 1960 建校到今天的每一步 · 共 " + items.length + " 条";
+  }
+
   function initTagsPage() {
     var idx = {}, result = $("#tagResult"), box = $("#tagIndex"), sub = $("#tagSub");
     if (!box) return;
@@ -2242,7 +2268,7 @@
     var page = document.body.getAttribute("data-page");
     var map = { sections: "社刊版块", works: "作品库", journal: "社刊", gallery: "活动现场",
       activity: "活动档案", about: "关于我们", guide: "投稿指南", craft: "写作课",
-      reading: "书单", contest: "征文", search: "搜索", authors: "作者", work: "作品", issue: "期号", tags: "标签索引" };
+      reading: "书单", contest: "征文", search: "搜索", authors: "作者", work: "作品", issue: "期号", tags: "标签索引", timeline: "大事记" };
     var label = map[page];
     var main = document.getElementById("main");
     if (!label || !main || document.querySelector(".crumb")) return;
@@ -2377,6 +2403,7 @@
     if (page === "gallery") renderGallery();
     if (page === "sections") renderSections();
     if (page === "tags") initTagsPage();
+    if (page === "timeline") initTimelinePage();
     if (page === "activity") initActivityPage();
     if (page === "about") { renderPeople(); renderBigTimeline(); }
     if (page === "guide") initGuidePage();
