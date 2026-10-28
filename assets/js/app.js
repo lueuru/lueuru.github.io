@@ -857,7 +857,8 @@
       var next = idx > -1 && idx < DATA.works.length - 1 ? DATA.works[idx + 1] : null;
 
       $("#wkTitle").textContent = w.title;
-      $("#wkMeta").textContent = (w.grade ? w.grade + (w.class_name ? w.class_name + "班" : "") + " · " : "") + w.author + " · " + (D.categories[w.category] || "") + (w.created_at ? " · " + fmtDate(w.created_at) : "");
+      var chars = (w.content || []).join("").length;
+      $("#wkMeta").textContent = (w.grade ? w.grade + (w.class_name ? w.class_name + "班" : "") + " · " : "") + w.author + " · " + (D.categories[w.category] || "") + (w.created_at ? " · " + fmtDate(w.created_at) : "") + " · " + chars + " 字 · 约 " + Math.max(1, Math.round(chars / 400)) + " 分钟";
       $("#wkArt").innerHTML = coverArt(w);
       $("#wkBody").innerHTML = w.content.map(function (p) { return p ? "<p>" + esc(p) + "</p>" : "" }).join("");
       var srcBox = $("#wkSource");
@@ -874,8 +875,22 @@
       $("#wkActions").innerHTML =
         '<button type="button" class="like-btn' + (liked ? " liked" : "") + '" data-id="' + w.id + '">' + icon("heart", liked) + ' <span class="n">' + (w.likes + (liked ? 1 : 0)) + "</span> 喜欢</button>" +
         '<button type="button" class="bookmark-btn' + (bmed ? " liked" : "") + '" data-id="' + w.id + '">' + icon("bookmark", bmed) + ' <span class="n">' + (w.bookmarks + (bmed ? 1 : 0)) + "</span> 收藏</button>" +
-        '<button type="button" class="share-btn" id="wkShareBtn">' + icon("share") + " 分享</button>";
+        '<button type="button" class="share-btn" id="wkShareBtn">' + icon("share") + " 分享</button>" +
+        '<span class="fs-ctl" role="group" aria-label="字号"><button type="button" class="fs-btn" data-fs="s">A−</button><button type="button" class="fs-btn" data-fs="m">A</button><button type="button" class="fs-btn" data-fs="l">A+</button></span>';
       on("#wkShareBtn", "click", function () { shareWork(w); });
+      var body0 = $("#wkBody");
+      var fs = localStorage.getItem("xb_wfs") || "m";
+      function applyFs(v) {
+        body0.classList.remove("wk-fs-s", "wk-fs-l");
+        if (v === "s") body0.classList.add("wk-fs-s");
+        if (v === "l") body0.classList.add("wk-fs-l");
+        localStorage.setItem("xb_wfs", v);
+        $$(".fs-btn").forEach(function (b) { b.classList.toggle("on", b.dataset.fs === v); });
+      }
+      applyFs(fs);
+      $$(".fs-btn").forEach(function (b) {
+        b.addEventListener("click", function () { applyFs(b.dataset.fs); });
+      });
       injectWorkLD(w);
       renderComments(w.id);
 
