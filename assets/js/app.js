@@ -1440,6 +1440,28 @@
       $("#authorSub").innerHTML = "作者主页 · 新笔文学社";
       $("#awTitle").textContent = "全部作品";
       $("#awGrid").innerHTML = a.works.map(workCard).join("");
+      /* 活动原文中的提及 */
+      var mentions = [];
+      (window.XB_ACTIVITIES || []).forEach(function (ac) {
+        (ac.paras || []).forEach(function (pp) {
+          if (pp.indexOf(a.name) > -1) mentions.push({ act: ac, sent: pp });
+        });
+      });
+      var mh = $("#authorMentions");
+      if (mh) mh.parentNode.removeChild(mh);
+      if (mentions.length) {
+        var mbox = document.createElement("div");
+        mbox.className = "guide-card rv on";
+        mbox.id = "authorMentions";
+        mbox.innerHTML = "<h2>活动原文中的提及</h2><div class='org-list'>" +
+          mentions.slice(0, 4).map(function (m) {
+            var t = m.sent, i = t.indexOf(a.name);
+            var seg = t.slice(Math.max(0, i - 42), Math.min(t.length, i + 66));
+            return "<div class='org-item'><b>" + esc(m.act.date) + "</b><span>…" + esc(seg) + "… · <a href='activity.html?id=" +
+              m.act.id + "' style='color:var(--gold)'>原文</a></span></div>";
+          }).join("") + "</div>";
+        wrap.appendChild(mbox);
+      }
       document.title = a.name + " - 新笔文学社";
       observeReveals();
     }
